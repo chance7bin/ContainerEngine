@@ -24,6 +24,12 @@ public class ApiResponse extends HashMap<String, Object> {
 
     /** 数据对象 */
     public static final String DATA_TAG = "data";
+    
+    /** 成功信息 */
+    public static final String SUCCESS_MSG = "success";
+    
+    /** 失败信息 */
+    public static final String ERROR_MSG = "error";
 
     /**
      * 初始化一个新创建的 ApiResponse 对象，使其表示一个空消息。
@@ -68,7 +74,7 @@ public class ApiResponse extends HashMap<String, Object> {
      */
     public static ApiResponse success()
     {
-        return ApiResponse.success("操作成功");
+        return ApiResponse.success(SUCCESS_MSG);
     }
 
     /**
@@ -78,7 +84,7 @@ public class ApiResponse extends HashMap<String, Object> {
      */
     public static ApiResponse success(Object data)
     {
-        return ApiResponse.success("操作成功", data);
+        return ApiResponse.success(SUCCESS_MSG, data);
     }
 
     /**
@@ -111,7 +117,7 @@ public class ApiResponse extends HashMap<String, Object> {
      */
     public static ApiResponse error()
     {
-        return ApiResponse.error("操作失败");
+        return ApiResponse.error(ERROR_MSG);
     }
 
     /**

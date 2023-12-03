@@ -71,6 +71,21 @@
             <version>1.6.2</version>
         </dependency>
 
+        <!--docker client-->
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java</artifactId>
+            <version>3.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-transport-httpclient5</artifactId>
+            <version>3.3.2</version>
+        </dependency>
+
+
+        <!--================== 工具类 ==================-->
+
         <!--常用工具类 -->
         <dependency>
             <groupId>org.apache.commons</groupId>

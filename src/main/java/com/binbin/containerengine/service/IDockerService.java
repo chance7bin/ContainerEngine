@@ -1,0 +1,68 @@
+package com.binbin.containerengine.service;
+
+import com.binbin.containerengine.entity.bo.ExecResponse;
+import com.binbin.containerengine.entity.bo.TerminalRsp;
+import com.binbin.containerengine.entity.po.docker.ContainerInfo;
+import com.binbin.containerengine.entity.po.docker.ImageInfo;
+
+import java.io.IOException;
+import java.util.List;
+
+/**
+ * @author 7bin
+ * @date 2023/11/30
+ */
+public interface IDockerService {
+
+    void listContainer();
+
+    ContainerInfo createContainer(ContainerInfo containerInfo);
+
+    int updateContainer(ContainerInfo containerInfo);
+
+    String getContainerStatusByContainerInsId(String containerInsId);
+
+
+    ImageInfo inspectImage(String sha256);
+
+    //获取docker镜像列表
+    List<ImageInfo> listImages();
+
+    //获取docker容器列表
+    List<ContainerInfo> listContainers();
+
+    ContainerInfo selectContainerByInsId(String insId);
+
+    void execCommand();
+
+    /**
+     * 导出镜像
+     *
+     * @param containerInsId docker中的容器实例id
+     * @param imageName 镜像名
+     * @param tag 镜像版本
+     * @return {@link String} 镜像的sha256
+     * @author 7bin
+     **/
+    String commitContainer(String containerInsId, String imageName, String tag);
+
+    void saveContainer();
+
+    TerminalRsp exportContainer(String container, String outputPath);
+
+    TerminalRsp importContainer(String inputPath, String imageName);
+
+    void startContainer(String containerInsId);
+
+    void stopContainer(String containerInsId);
+
+    void removeContainer(String containerInsId);
+
+    boolean isContainerRunning(String containerInsId);
+
+    void pushImage(String imageName, String tag) throws InterruptedException;
+
+    void pullImage(String imageName, String tag) throws InterruptedException;
+
+    ExecResponse exec(String[] cmdArr) throws IOException, InterruptedException;
+}

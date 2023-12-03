@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class TerminalRes {
+public class TerminalRsp {
     Integer code;
     String msg;
 
@@ -21,12 +21,12 @@ public class TerminalRes {
 
     public static final Integer ERROR_CODE = -1;
 
-    public static TerminalRes success(String msg){
-        return new TerminalRes(SUCCESS_CODE, msg);
+    public static TerminalRsp success(String msg){
+        return new TerminalRsp(SUCCESS_CODE, msg);
     }
 
-    public static TerminalRes error(String msg){
-        return new TerminalRes(ERROR_CODE, msg);
+    public static TerminalRsp error(String msg){
+        return new TerminalRsp(ERROR_CODE, msg);
     }
 
 

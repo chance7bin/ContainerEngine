@@ -1,6 +1,6 @@
 package com.binbin.containerengine.utils;
 
-import com.binbin.containerengine.entity.bo.TerminalRes;
+import com.binbin.containerengine.entity.bo.TerminalRsp;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayOutputStream;
@@ -32,7 +32,7 @@ public class TerminalUtils {
      * @return long 退出状态码 0:[成功]; -1 or 其他:[失败]
      * @author 7bin
      **/
-    public static TerminalRes exec(String[] cmdArr) {
+    public static TerminalRsp exec(String[] cmdArr) {
 
         long start = System.currentTimeMillis();
         // String exe = "python";
@@ -66,16 +66,16 @@ public class TerminalUtils {
             // }
 
             if (exitVal == 0) {
-                return TerminalRes.success(response);
+                return TerminalRsp.success(response);
             } else {
                 // exitVal = 1
-                return TerminalRes.error(error);
+                return TerminalRsp.error(error);
             }
         } catch (Exception e) {
             // log.error("执行终端命令出错:\n " + e.getMessage());
             // setErrorMsg(e.getMessage());
             // return new TerminalRes(-1, "Terminal command is wrong: " + e.getMessage());
-            return TerminalRes.error("Terminal command is wrong: " + e.getMessage());
+            return TerminalRsp.error("Terminal command is wrong: " + e.getMessage());
         }
 
     }
