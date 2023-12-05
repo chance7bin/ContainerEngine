@@ -1,5 +1,6 @@
 package com.binbin.containerengine.service;
 
+import com.binbin.containerengine.constant.TaskStatusConstants;
 import com.binbin.containerengine.entity.bo.ExecResponse;
 import com.binbin.containerengine.entity.bo.TerminalRsp;
 import com.binbin.containerengine.entity.po.docker.ContainerInfo;
@@ -33,7 +34,26 @@ public interface IDockerService {
 
     ContainerInfo selectContainerByInsId(String insId);
 
-    void execCommand();
+
+    /**
+     * 执行脚本 默认异步调用
+     * @param insId 容器实例id
+     * @param script 脚本
+     * @return 脚本执行的任务id
+     */
+    String exec(String insId, String script);
+
+    /**
+     * 执行脚本
+     * @param insId 容器实例id
+     * @param script 脚本
+     * @param mode 调用方式 异步/同步
+     * @return 脚本执行的任务id
+     */
+    String exec(String insId, String script, String mode);
+
+    void execAsync(String execId);
+
 
     /**
      * 导出镜像
@@ -64,5 +84,12 @@ public interface IDockerService {
 
     void pullImage(String imageName, String tag) throws InterruptedException;
 
-    ExecResponse exec(String[] cmdArr) throws IOException, InterruptedException;
+    ExecResponse execWithTerminal(String[] cmdArr) throws IOException, InterruptedException;
+
+    /**
+     * 查看脚本执行状态
+     * @param execId 脚本执行的任务id
+     * @return 脚本执行状，状态的情况在{@link TaskStatusConstants}类中
+     */
+    String getExecStatus(String execId);
 }

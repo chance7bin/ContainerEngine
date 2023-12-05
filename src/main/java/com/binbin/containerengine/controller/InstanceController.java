@@ -2,12 +2,11 @@ package com.binbin.containerengine.controller;
 
 import com.binbin.containerengine.controller.common.BaseController;
 import com.binbin.containerengine.entity.dto.ApiResponse;
+import com.binbin.containerengine.entity.dto.docker.ExecDTO;
 import com.binbin.containerengine.service.IDockerService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author 7bin
@@ -33,6 +32,20 @@ public class InstanceController extends BaseController {
     public ApiResponse list() {
         dockerService.listContainer();
         return ApiResponse.success();
+    }
+
+    @ApiOperation(value = "执行脚本")
+    @PostMapping("/task/actions/exec")
+    public ApiResponse exec(@RequestBody ExecDTO execDTO) {
+        String execId = dockerService.exec(execDTO.getInsId(), execDTO.getScript());
+        return ApiResponse.success(execId);
+    }
+
+    @ApiOperation(value = "查看脚本执行状态")
+    @GetMapping("/task/actions/exec/status")
+    public ApiResponse getExecStatus(@RequestParam String execId) {
+        String status = dockerService.getExecStatus(execId);
+        return ApiResponse.success(status);
     }
 
 

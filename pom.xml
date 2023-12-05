@@ -26,6 +26,16 @@
         <bitwalker.version>1.21</bitwalker.version>
     </properties>
     <dependencies>
+
+        <!-- SpringBoot的依赖配置-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-dependencies</artifactId>
+            <version>${spring-boot.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
@@ -82,6 +92,13 @@
             <artifactId>docker-java-transport-httpclient5</artifactId>
             <version>3.3.2</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>1.9.6</version>
+        </dependency>
+
 
 
         <!--================== 工具类 ==================-->

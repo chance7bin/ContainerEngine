@@ -53,6 +53,20 @@ public class FileUtils extends org.apache.commons.io.FileUtils
         return readTxtFile(is);
     }
 
+    /**
+     * 根据输入路径读取文本字符串
+     * @param filePath 文件路径
+     * @return java.lang.String
+     * @Author bin
+     **/
+    public static String readTxtFile(String filePath) throws IOException {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            throw new FileNotFoundException(filePath);
+        }
+        FileInputStream fis = new FileInputStream(file);
+        return readTxtFile(fis);
+    }
 
     /**
      * 根据输入流读取文本字符串
@@ -607,4 +621,21 @@ public class FileUtils extends org.apache.commons.io.FileUtils
     public static Boolean exist(String path) {
         return FileUtil.exist(path);
     }
+
+
+    /**
+     * 写内容到制定路径，覆盖原文件
+     * @param path 文件路径
+     * @param content 内容
+     * @return {@link Boolean} true 写入成功 false 写入失败
+     */
+    public static File write(String path, String content) {
+        return FileUtil.writeUtf8String(content, path);
+    }
+
+
+
+
+
+
 }

@@ -1,25 +1,40 @@
 package com.binbin.containerengine.service.impl;
 
+import com.binbin.containerengine.constant.Constants;
 import com.binbin.containerengine.constant.ContainerStatus;
+import com.binbin.containerengine.constant.FileConstants;
+import com.binbin.containerengine.constant.TaskStatusConstants;
 import com.binbin.containerengine.entity.bo.ExecResponse;
 import com.binbin.containerengine.entity.bo.TerminalRsp;
 import com.binbin.containerengine.entity.po.docker.ContainerInfo;
 import com.binbin.containerengine.entity.po.docker.ImageInfo;
+import com.binbin.containerengine.exception.ServiceException;
 import com.binbin.containerengine.service.IDockerService;
 import com.binbin.containerengine.utils.StringUtils;
 import com.binbin.containerengine.utils.TerminalUtils;
+import com.binbin.containerengine.utils.file.FileUtils;
+import com.binbin.containerengine.utils.spring.SpringUtils;
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.async.ResultCallbackTemplate;
 import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.model.*;
+import com.github.dockerjava.core.command.ExecStartResultCallback;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.apache.bcel.generic.RET;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,6 +50,11 @@ public class DockerServiceImpl implements IDockerService {
 
     @Value(value = "${docker.registry-url}")
     String dockerRegistryUrl;
+
+    @Value(value = "${file.save-path}")
+    String savePath;
+
+    private final static String CONTAINER_DIR = "container";
 
     @Override
     public void listContainer() {
@@ -159,8 +179,142 @@ public class DockerServiceImpl implements IDockerService {
 
 
     @Override
-    public void execCommand() {
+    public String exec(String insId, String script){
+        return exec(insId, script, Constants.ASYNC);
+    }
 
+    @Override
+    public String exec(String insId, String script, String mode) {
+
+        // 多行命令时需在每行末尾加入\n 换行转义符 （使用&&时curl无法识别，需\&转义，所以规定使用\n，后端将\n转换为&&)
+        script = script.replaceAll("\n", "&&");
+        ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(insId)
+            .withAttachStdout(true)
+            .withAttachStderr(true)
+            .withCmd("/bin/bash", "-c", script)
+            .exec();
+
+        String execId = execCreateCmdResponse.getId();
+
+        // 使用一个tmp文件标记当前任务是否已经执行完毕
+        recordExecProcessing(execId, TaskStatusConstants.CREATED);
+
+        // 同步调用还是异步调用
+        if (Constants.SYNC.equals(mode)){
+            execSync(execId);
+        } else {
+
+            // SpringUtils.getAopProxy(this).execAsync(execId); // 使用该方法报错
+            IDockerService proxy = (IDockerService) AopContext.currentProxy();
+            proxy.execAsync(execId);
+
+            // 使用getBean获取代理对象，实现异步调用
+            // SpringUtils.getBean(IDockerService.class).execAsync(execId);
+        }
+
+        return execId;
+
+    }
+
+    // 使用countDownLatch阻塞线程，等待结果返回
+    // 现在直接用 ExecStartResultCallback 的 awaitCompletion 方法阻塞线程就行了
+    private void execSyncWithResult(String execId){
+
+        // 异步 -> 同步
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        final long SECONDS_OF_WAIT_TIME = 300L;// 等待时间 5分钟
+
+        List<String> result = new ArrayList<>();
+
+        ResultCallback<Frame> callback = new ResultCallbackTemplate<ResultCallback<Frame>, Frame>() {
+
+            //3.结果返回后进行回调，解除阻塞
+            @Override
+            public void onNext(Frame frame) {
+
+                // 如果调用的脚本没输出东西到终端，那么不会触发onNext方法
+                result.add(new String(frame.getPayload()).trim());
+                System.out.println();
+                countDownLatch.countDown();
+
+            }
+        };
+
+        // 1.异步调用
+        dockerClient.execStartCmd(execId)
+            .withDetach(false) // true 直接返回， false会回调callback方法
+            .exec(callback);
+
+        // 2.阻塞等待异步响应
+        try {
+            countDownLatch.await(SECONDS_OF_WAIT_TIME, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        //4.超时或结果正确返回，对结果进行处理
+        System.out.println(result);
+
+    }
+
+    // 异步调用任务
+    @Async
+    @Override
+    public void execAsync(String execId){
+        // ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        // dockerClient.execStartCmd(execId)
+        //     .exec(new ExecStartResultCallback(outputStream, null));
+        log.info("execAsync execId: {}", execId);
+        execSync(execId);
+    }
+
+    private void execSync(String execId){
+        log.info("execSync");
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        recordExecProcessing(execId, TaskStatusConstants.RUNNING);
+        try {
+            dockerClient.execStartCmd(execId)
+                // .withDetach(false) // true 直接返回， false会回调callback方法
+                .exec(new ExecStartResultCallback(null, stderr))
+                .awaitCompletion();
+            // System.out.println(stdout.toString());
+            // System.out.println(stderr.toString());
+            if ("".equals(stderr.toString())){
+                recordExecProcessing(execId, TaskStatusConstants.FINISHED);
+            } else {
+                recordExecProcessing(execId, TaskStatusConstants.FAILED);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Override
+    public String getExecStatus(String execId) {
+
+        String tmpFilePath = getExecProcessingFilePath(execId);
+        String result = TaskStatusConstants.OTHER;
+        try {
+            result = FileUtils.readTxtFile(tmpFilePath);
+        } catch (IOException e) {
+            throw new ServiceException("file not found: " + tmpFilePath);
+        }
+
+        return result;
+    }
+
+    // 记录exec执行的状态
+    private void recordExecProcessing(String execId, String result){
+        String tmpFilePath = getExecProcessingFilePath(execId);
+        FileUtils.write(tmpFilePath, result);
+    }
+
+    private String getExecProcessingFilePath(String execId){
+        return savePath
+            + FileConstants.FILE_PATH_SEPARATOR + CONTAINER_DIR
+            + FileConstants.FILE_PATH_SEPARATOR + execId;
     }
 
     @Override
@@ -232,7 +386,7 @@ public class DockerServiceImpl implements IDockerService {
     }
 
     @Override
-    public ExecResponse exec(String[] cmdArr) throws IOException, InterruptedException {
+    public ExecResponse execWithTerminal(String[] cmdArr) throws IOException, InterruptedException {
 
         //这个方法是类似隐形开启了命令执行器，输入指令执行python脚本
         Process process = Runtime.getRuntime()
@@ -250,6 +404,7 @@ public class DockerServiceImpl implements IDockerService {
         return new ExecResponse(exitVal, response, error);
 
     }
+
 
 
     //初始化容器

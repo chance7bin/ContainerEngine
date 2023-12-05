@@ -90,12 +90,12 @@ public class ApiResponse extends HashMap<String, Object> {
     /**
      * 返回成功消息
      *
-     * @param msg 返回内容
+     * @param data 返回内容
      * @return 成功消息
      */
-    public static ApiResponse success(String msg)
+    public static ApiResponse success(String data)
     {
-        return ApiResponse.success(msg, null);
+        return ApiResponse.success(SUCCESS_MSG, data);
     }
 
     /**

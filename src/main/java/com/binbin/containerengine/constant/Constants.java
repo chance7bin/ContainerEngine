@@ -134,4 +134,16 @@ public class Constants
      */
     public static final String[] JOB_ERROR_STR = { "java.net.URL", "javax.naming.InitialContext", "org.yaml.snakeyaml",
             "org.springframework", "org.apache", "org.opengms.common.utils.file" };
+
+
+    /**
+    * 同步调用
+    */
+    public static final String SYNC = "sync";
+
+    /**
+     * 异步调用
+     */
+    public static final String ASYNC = "async";
+
 }

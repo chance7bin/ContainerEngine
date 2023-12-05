@@ -43,7 +43,8 @@ public class GlobalExceptionHandler {
     public ApiResponse handleServiceException(ServiceException e, HttpServletRequest request)
     {
         String requestURI = request.getRequestURI();
-        log.error("请求地址[ {} ], 发生业务异常.", requestURI, e);
+        // log.error("请求地址[ {} ], 发生业务异常.", requestURI, e);
+        log.error("Request address [ {} ], business exception.", requestURI, e);
         Integer code = e.getCode();
         return StringUtils.isNotNull(code) ? ApiResponse.error(code, e.getMessage()) : ApiResponse.error(e.getMessage());
     }
