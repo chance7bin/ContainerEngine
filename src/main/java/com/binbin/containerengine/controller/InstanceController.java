@@ -3,7 +3,9 @@ package com.binbin.containerengine.controller;
 import com.binbin.containerengine.controller.common.BaseController;
 import com.binbin.containerengine.entity.dto.ApiResponse;
 import com.binbin.containerengine.entity.dto.docker.ExecDTO;
+import com.binbin.containerengine.entity.po.ExecInfo;
 import com.binbin.containerengine.service.IDockerService;
+import com.github.dockerjava.api.command.InspectExecResponse;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -48,5 +50,19 @@ public class InstanceController extends BaseController {
         return ApiResponse.success(status);
     }
 
+
+    @ApiOperation(value = "查看docker内脚本执行信息")
+    @GetMapping("/task/actions/exec/info")
+    public ApiResponse getExecInfo(@RequestParam String execId) {
+        ExecInfo info = dockerService.getExecInfoByExecId(execId);
+        return ApiResponse.success(info);
+    }
+
+    @ApiOperation(value = "查看docker内脚本是否执行完成")
+    @GetMapping("/task/actions/exec/ifdone")
+    public ApiResponse getExecIfDone(@RequestParam String execId) {
+        boolean ifdone = dockerService.getExecIfDone(execId);
+        return ApiResponse.success(ifdone);
+    }
 
 }

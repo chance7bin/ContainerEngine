@@ -14,7 +14,7 @@ import lombok.Data;
 public class ImageInfo extends BaseEntity {
 
     /** 数据库中的镜像id */
-    Long id;
+    // Long id;
 
     /** docker中的镜像id */
     String imageId;

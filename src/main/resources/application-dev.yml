@@ -1,5 +1,11 @@
 
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/ContainerEngine
+
 # 文件配置
 file:
   # 文件存储路径
-  save-path: E:/container-engine/file
+#  save-path: E:/container-engine/file
+  save-path: E:/container-engine/container/tmp

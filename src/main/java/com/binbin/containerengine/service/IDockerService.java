@@ -3,8 +3,10 @@ package com.binbin.containerengine.service;
 import com.binbin.containerengine.constant.TaskStatusConstants;
 import com.binbin.containerengine.entity.bo.ExecResponse;
 import com.binbin.containerengine.entity.bo.TerminalRsp;
+import com.binbin.containerengine.entity.po.ExecInfo;
 import com.binbin.containerengine.entity.po.docker.ContainerInfo;
 import com.binbin.containerengine.entity.po.docker.ImageInfo;
+import com.github.dockerjava.api.command.InspectExecResponse;
 
 import java.io.IOException;
 import java.util.List;
@@ -92,4 +94,13 @@ public interface IDockerService {
      * @return 脚本执行状，状态的情况在{@link TaskStatusConstants}类中
      */
     String getExecStatus(String execId);
+
+    /**
+     * 查看docker内脚本执行信息
+     * @param execId 脚本执行的任务id
+     * @return 脚本执行信息
+     */
+    ExecInfo getExecInfoByExecId(String execId);
+
+    boolean getExecIfDone(String execId);
 }
