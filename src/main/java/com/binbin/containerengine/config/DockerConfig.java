@@ -34,6 +34,8 @@ public class DockerConfig {
         return connect();
     }
 
+    private static final int _3DAYS = 3 * 24 * 60 * 60;
+
     /** 连接docker */
     private DockerClient connect() {
         String host = "tcp://" + serverHost + ":" + serverPort;
@@ -49,7 +51,7 @@ public class DockerConfig {
             .dockerHost(config.getDockerHost())
             .maxConnections(100)
             .connectionTimeout(Duration.ofSeconds(30))
-            .responseTimeout(Duration.ofSeconds(45))
+            .responseTimeout(Duration.ofSeconds(_3DAYS)) // 执行时间超过responseTimeout会报错：Read timed out
             .build();
         //创建DockerClient
         DockerClient client = DockerClientImpl.getInstance(config, httpClient);

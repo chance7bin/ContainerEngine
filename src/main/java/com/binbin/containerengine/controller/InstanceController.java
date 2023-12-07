@@ -51,18 +51,25 @@ public class InstanceController extends BaseController {
     }
 
 
-    @ApiOperation(value = "查看docker内脚本执行信息")
+    @ApiOperation(value = "查看脚本执行信息")
     @GetMapping("/task/actions/exec/info")
     public ApiResponse getExecInfo(@RequestParam String execId) {
         ExecInfo info = dockerService.getExecInfoByExecId(execId);
         return ApiResponse.success(info);
     }
 
-    @ApiOperation(value = "查看docker内脚本是否执行完成")
+    @ApiOperation(value = "查看脚本是否执行完成")
     @GetMapping("/task/actions/exec/ifdone")
     public ApiResponse getExecIfDone(@RequestParam String execId) {
         boolean ifdone = dockerService.getExecIfDone(execId);
         return ApiResponse.success(ifdone);
     }
 
+
+    @ApiOperation(value = "查看脚本执行信息")
+    @GetMapping("/task/actions/exec/inspect")
+    public ApiResponse inspectExecCmd(@RequestParam String execId) {
+        InspectExecResponse response = dockerService.inspectExecCmd(execId);
+        return ApiResponse.success(response);
+    }
 }

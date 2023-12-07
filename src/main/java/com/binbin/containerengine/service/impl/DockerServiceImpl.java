@@ -24,6 +24,7 @@ import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -210,23 +211,50 @@ public class DockerServiceImpl implements IDockerService {
         execInfoDao.insert(execInfo);
 
         // 脚本执行时间过长时，会导致回调异常：Error during callback
-        dockerClient.execStartCmd(execId)
-            .withDetach(true) // 直接返回，不等了
-            .exec(new ExecStartResultCallback(System.out, System.err));
-
-        execInfo.setStatus(TaskStatusConstants.RUNNING);
-        execInfoDao.save(execInfo);
-
+        // ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        // ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+        // dockerClient.execStartCmd(execId)
+        //     // .withDetach(true) // 直接返回，不等了
+        //     .exec(new ExecStartResultCallback(stdout, stderr));
+        // execInfo.setStatus(TaskStatusConstants.RUNNING);
+        // execInfoDao.save(execInfo);
         // 执行脚本后设置定时任务检查脚本执行结果
+        // scheduledCheckTask(execId);
+
+        // 同步调用还是异步调用
+        log.info("exec: [ {} ]", script);
+        if (Constants.SYNC.equals(mode)){
+
+            execSync(execId);
+
+        } else {
+
+            // SpringUtils.getAopProxy(this).execAsync(execId); // 使用该方法报错
+            // IDockerService proxy = (IDockerService) AopContext.currentProxy(); // 使用获取代理的方式调用异步方法
+
+            // 使用getBean获取代理对象，实现异步调用
+            // SpringUtils.getBean(IDockerService.class).execAsync(execId);
+
+            execAsync(execId);
+
+        }
+
+        return execId;
+
+    }
+
+    // 创建定时任务检查任务的执行状态
+    private void scheduledCheckTask(String execId){
+
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                InspectExecResponse info = getExecInfoInDocker(execId);
+                InspectExecResponse info = inspectExecCmd(execId);
                 // log.info("检查脚本执行结果 - 是否正在运行 : " + info.isRunning());
                 if (!info.isRunning()){
 
                     // 更新 task info 信息
-                    ExecInfo res = execInfoDao.findById(execInfo.getId()).orElseThrow(() -> new ServiceException("execInfo[id=" + execInfo.getId() + "] not found"));
+                    ExecInfo res = getExecInfoByExecId(execId);
                     res.setExitCode(info.getExitCodeLong());
                     res.setRunning(info.isRunning());
                     res.setStatus(Objects.equals(res.getExitCode(), NORMAL_EXIT_CODE) ? TaskStatusConstants.FINISHED : TaskStatusConstants.FAILED);
@@ -241,24 +269,7 @@ public class DockerServiceImpl implements IDockerService {
 
         ScheduledFuture scheduledFuture = ThreadPoolManager.instance().scheduleWithFixedDelay(task, 1000);
         ThreadPoolManager.instance().recordTask(execId, scheduledFuture);
-
-        // 同步调用还是异步调用（都是异步的了，不同步了）
-        // if (Constants.SYNC.equals(mode)){
-        //     execSync(execId);
-        // } else {
-        //
-        //     // SpringUtils.getAopProxy(this).execAsync(execId); // 使用该方法报错
-        //     IDockerService proxy = (IDockerService) AopContext.currentProxy();
-        //     proxy.execAsync(execId);
-        //
-        //     // 使用getBean获取代理对象，实现异步调用
-        //     // SpringUtils.getBean(IDockerService.class).execAsync(execId);
-        // }
-
-        return execId;
-
     }
-
 
     // 使用countDownLatch阻塞线程，等待结果返回
     // 现在直接用 ExecStartResultCallback 的 awaitCompletion 方法阻塞线程就行了
@@ -304,23 +315,24 @@ public class DockerServiceImpl implements IDockerService {
 
     // 异步调用任务
     // @Async
-    @Deprecated
     @Override
     public void execAsync(String execId){
         // ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         // dockerClient.execStartCmd(execId)
         //     .exec(new ExecStartResultCallback(outputStream, null));
-        log.info("execAsync execId: {}", execId);
-        execSync(execId);
+        // log.info("execAsync execId: {}", execId);
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                execSync(execId);
+            }
+        };
+        ThreadPoolManager.instance().execute(task);
     }
 
-    // 如果执行太久会报错：Read timed out，所以不建议用同步的了
-    @Deprecated
-    private void execSync(String execId){
-        log.info("execSync");
 
-        // 使用一个tmp文件标记当前任务是否已经执行完毕
-        recordExecProcessing(execId, TaskStatusConstants.CREATED);
+    private void execSync(String execId){
+        // log.info("execSync");
 
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -330,16 +342,32 @@ public class DockerServiceImpl implements IDockerService {
         try {
             dockerClient.execStartCmd(execId)
                 // .withDetach(false) // true 直接返回， false会回调callback方法
-                .exec(new ExecStartResultCallback(null, stderr))
+                .exec(new ExecStartResultCallback(stdout, stderr))
                 .awaitCompletion(); // 如果执行太久会报错：Read timed out
             // System.out.println(stdout.toString());
             // System.out.println(stderr.toString());
-            if ("".equals(stderr.toString())){
-                recordExecProcessing(execId, TaskStatusConstants.FINISHED);
-            } else {
-                recordExecProcessing(execId, TaskStatusConstants.FAILED);
-            }
-        } catch (InterruptedException e) {
+            // if ("".equals(stderr.toString())){
+            //     recordExecProcessing(execId, TaskStatusConstants.FINISHED);
+            // } else {
+            //     recordExecProcessing(execId, TaskStatusConstants.FAILED);
+            // }
+            InspectExecResponse inspectInfo = inspectExecCmd(execId);
+            // 更新 task info 信息
+            ExecInfo execInfo = getExecInfoByExecId(execId);
+            execInfo.setExitCode(inspectInfo.getExitCodeLong());
+            execInfo.setRunning(inspectInfo.isRunning());
+            execInfo.setStatus(Objects.equals(inspectInfo.getExitCodeLong(), NORMAL_EXIT_CODE) ? TaskStatusConstants.FINISHED : TaskStatusConstants.FAILED);
+            execInfo.setStderr(stderr.toString());
+            execInfoDao.save(execInfo);
+
+        } catch (InterruptedException | RuntimeException e) {
+            ExecInfo execInfo = getExecInfoByExecId(execId);
+            execInfo.setExitCode(1L);
+            execInfo.setRunning(false);
+            execInfo.setStatus(TaskStatusConstants.FAILED);
+            execInfo.setStderr(e.getMessage());
+            execInfoDao.save(execInfo);
+
             e.printStackTrace();
         }
     }
@@ -369,13 +397,14 @@ public class DockerServiceImpl implements IDockerService {
         return execInfo;
     }
 
-
-    public InspectExecResponse getExecInfoInDocker(String execId){
+    @Override
+    public InspectExecResponse inspectExecCmd(String execId){
 
         // exec instance 是临时的，运行的一定时间才有效，时间太长就失效了
         // exitCode 正常退出为0，异常退出不为0
         InspectExecResponse rsp = dockerClient.inspectExecCmd(execId).exec();
         // System.out.println(rsp);
+
         return rsp;
     }
 
@@ -386,9 +415,16 @@ public class DockerServiceImpl implements IDockerService {
     }
 
     // 记录exec执行的状态
-    private void recordExecProcessing(String execId, String result){
-        String tmpFilePath = getExecProcessingFilePath(execId);
-        FileUtils.write(tmpFilePath, result);
+    private void recordExecProcessing(String execId, String status){
+        // 记录到文件中（deprecated）
+        // String tmpFilePath = getExecProcessingFilePath(execId);
+        // FileUtils.write(tmpFilePath, status);
+
+        // 记录到数据库中
+        ExecInfo info = getExecInfoByExecId(execId);
+        info.setStatus(status);
+        execInfoDao.save(info);
+
     }
 
     private String getExecProcessingFilePath(String execId){

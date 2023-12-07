@@ -15,9 +15,14 @@ spring:
       max-file-size: -1
 
 
+
 # 应用服务 WEB 访问端口
 server:
   port: 8808
+#  servlet:
+#    encoding:
+#      charset: UTF-8
+#      force-response: true # 修改 SpringBoot 默认响应为 utf-8 (原: charset=iso-8859-1)
 
 swagger:
   enabled: true

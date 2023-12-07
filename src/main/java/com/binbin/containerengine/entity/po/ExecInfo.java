@@ -27,4 +27,8 @@ public class ExecInfo extends BaseEntity {
 
     private String status = TaskStatusConstants.CREATED;
 
+    private String stdout;
+
+    private String stderr;
+
 }

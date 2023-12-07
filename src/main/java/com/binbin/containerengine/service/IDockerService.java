@@ -96,11 +96,18 @@ public interface IDockerService {
     String getExecStatus(String execId);
 
     /**
-     * 查看docker内脚本执行信息
+     * 查看脚本执行信息
      * @param execId 脚本执行的任务id
      * @return 脚本执行信息
      */
     ExecInfo getExecInfoByExecId(String execId);
+
+    /**
+     * 查看docker内脚本执行信息
+     * @param execId 脚本执行的任务id
+     * @return 脚本执行信息
+     */
+    InspectExecResponse inspectExecCmd(String execId);
 
     boolean getExecIfDone(String execId);
 }

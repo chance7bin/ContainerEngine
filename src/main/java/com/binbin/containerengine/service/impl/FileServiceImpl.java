@@ -59,9 +59,14 @@ public class FileServiceImpl implements IFileService {
 
     @Override
     public Long uploadFiles(FileDTO fileDTO){
-        String path = savePath + FileConstants.FILE_PATH_SEPARATOR + fileDTO.getPath()
-            + FileConstants.FILE_PATH_SEPARATOR + fileDTO.getFile().getOriginalFilename();
+        String path = savePath + FileConstants.FILE_PATH_SEPARATOR + fileDTO.getPath();
         File newFile = new File(path);
+
+        // 判断文件是否允许覆盖
+        if (newFile.exists() && FileConstants.UNCOVER.equals(fileDTO.getCover())) {
+            throw new ServiceException("file already exists");
+        }
+
         // 如果该存储路径不存在则新建存储路径
         if (!newFile.getParentFile().exists()) {
             newFile.getParentFile().mkdirs();
@@ -70,13 +75,13 @@ public class FileServiceImpl implements IFileService {
         try {
             fileDTO.getFile().transferTo(newFile);
         } catch (IOException e) {
-            // e.printStackTrace();
-            log.error("文件写入异常");
+            // log.error("文件写入异常");
             throw new ServiceException("文件写入异常");
         }
 
         // 保存文件信息
         // FileInfo fileInfo = new FileInfo();
+        // ...
 
         return 1L;
     }

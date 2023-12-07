@@ -59,8 +59,10 @@ public class FileController {
         }
         FileDTO fileDTO = new FileDTO();
         fileDTO.setFile(file);
+        fileDTO.setCover(cover);
         fileDTO.setPath(path);
-        return ApiResponse.success("upload success", fileService.uploadFiles(fileDTO));
+        fileService.uploadFiles(fileDTO);
+        return ApiResponse.success("upload success");
     }
 
 

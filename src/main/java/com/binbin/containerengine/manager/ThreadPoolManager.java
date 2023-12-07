@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Map;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -91,7 +92,8 @@ public class ThreadPoolManager {
      */
     public void recordTask(String taskId, ScheduledFuture<?> scheduledFuture) {
         tasks.put(taskId, scheduledFuture);
-        log.info("start schedule task: {}", taskId);
+        log.info("record schedule task: {}", taskId.substring(0, 5) + "..." + taskId.substring(taskId.length() - 5));
+
     }
 
     /**
@@ -102,8 +104,9 @@ public class ThreadPoolManager {
         if (scheduledFuture != null) {
             scheduledFuture.cancel(true);
             tasks.remove(taskId);
-            log.info("cancel schedule task: {}", taskId);
+            log.info("cancel schedule task: {}", taskId.substring(0, 5) + "..." + taskId.substring(taskId.length() - 5));
         }
     }
+
 
 }
