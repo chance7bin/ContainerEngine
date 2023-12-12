@@ -43,4 +43,23 @@ public interface IFileService {
      */
     InputStream getFileInputStream(String path);
 
+
+    /**
+     * 将文件拷贝到容器中
+     *
+     * @param containerId  容器id
+     * @param hostPath     宿主机文件路径（全路径）
+     * @param remotePath   容器内文件夹路径（不需要带文件名，文件名默认是宿主机文件名）（该路径必须存在）
+     */
+    void copyFileToContainer(String containerId, String hostPath, String remotePath);
+
+    /**
+     * 将容器内的文件拷贝到宿主机
+     *
+     * @param containerId  容器id
+     * @param remotePath   容器内文件路径（全路径）
+     * @param hostPath     宿主机文件路径（全路径，父文件夹要先存在）
+     */
+    void copyFileFromContainer(String containerId, String remotePath, String hostPath);
+
 }

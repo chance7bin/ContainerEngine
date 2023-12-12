@@ -25,7 +25,7 @@ public class ThreadPoolManager {
     /**
      * 操作延迟10毫秒
      */
-    private static final int OPERATE_DELAY_TIME = 10;
+    private static final int OPERATE_DELAY_TIME = 1000;
 
 
     /**

@@ -13,8 +13,10 @@ import com.binbin.containerengine.entity.po.docker.ImageInfo;
 import com.binbin.containerengine.exception.ServiceException;
 import com.binbin.containerengine.manager.ThreadPoolManager;
 import com.binbin.containerengine.service.IDockerService;
+import com.binbin.containerengine.utils.CmdUtils;
 import com.binbin.containerengine.utils.StringUtils;
 import com.binbin.containerengine.utils.TerminalUtils;
+import com.binbin.containerengine.utils.Threads;
 import com.binbin.containerengine.utils.file.FileUtils;
 import com.binbin.containerengine.utils.uuid.SnowFlake;
 import com.github.dockerjava.api.DockerClient;
@@ -195,13 +197,14 @@ public class DockerServiceImpl implements IDockerService {
 
         // 多行命令时需在每行末尾加入\n 换行转义符 （使用&&时curl无法识别，需\&转义，所以规定使用\n，后端将\n转换为&&)
         script = script.replaceAll("\n", "&&");
-        ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(insId)
-            .withAttachStdout(true)
-            .withAttachStderr(true)
-            .withCmd("/bin/bash", "-c", script)
-            .exec();
-
-        String execId = execCreateCmdResponse.getId();
+        // ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(insId)
+        //     .withAttachStdout(true)
+        //     .withAttachStderr(true)
+        //     .withCmd("/bin/bash", "-c", script)
+        //     .exec();
+        //
+        // String execId = execCreateCmdResponse.getId();
+        String execId = execCreateCmd(insId, script);
 
         // 记录 exec 状态
         ExecInfo execInfo = new ExecInfo();
@@ -241,6 +244,55 @@ public class DockerServiceImpl implements IDockerService {
 
         return execId;
 
+    }
+
+    @Override
+    public void test(){
+        String insId = "f8d4db1b87e1e2be84ae51d9ac7dd90dfaf181aa052ea2ed552b68a75f4ed027";
+        // String script = "echo 123";
+        String script = CmdUtils.latestScriptPidCmd("grep python");
+        String rsp = execSimpleCmd(insId, script);
+        if (!StringUtils.isEmpty(rsp)){
+            String pid = StringUtils.matchNumber(rsp);
+            System.out.println(pid);
+            script = CmdUtils.killScriptCmd(pid);
+            rsp = execSimpleCmd(insId, script);
+            System.out.println(rsp);
+        }
+    }
+
+    @Override
+    public void createFolderInContainer(String containerId, String folderPath){
+        String script = CmdUtils.createDirCmd(folderPath);
+        execSimpleCmd(containerId, script);
+    }
+
+
+    private String execCreateCmd(String insId, String script){
+        ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(insId)
+            .withAttachStdout(true)
+            .withAttachStderr(true)
+            .withCmd("/bin/bash", "-c", script)
+            .exec();
+        return execCreateCmdResponse.getId();
+    }
+
+    // 调用简单的cmd命令获取一些系统信息
+    private String execSimpleCmd(String insId, String script){
+        String execId = execCreateCmd(insId, script);
+
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+        try {
+            dockerClient.execStartCmd(execId)
+                .exec(new ExecStartResultCallback(stdout, stderr))
+                .awaitCompletion();
+            return stdout.toString();
+        } catch (InterruptedException | RuntimeException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     // 创建定时任务检查任务的执行状态
@@ -328,6 +380,48 @@ public class DockerServiceImpl implements IDockerService {
             }
         };
         ThreadPoolManager.instance().execute(task);
+
+
+        // 延迟一秒记录当前脚本在容器内部的pid
+        TimerTask task2 = new TimerTask() {
+            @Override
+            public void run() {
+                // log.info("record pid");
+
+                // 这里为什么要阻塞一下
+                // 比如说前面那个异步任务如果在线程池满了的时候加入，会导致前面那个任务被阻塞，
+                // 那么这个延迟一面的定时任务会先于前面执行，获取到的pid就是前一个脚本的pid了
+                // 解决方法：当前定时任务先阻塞住，如果异步任务更新为running的话再唤醒当前的定时任务，如果异步任务终止的话直接退出该方法
+                while (true){
+                    String status = getExecInfoByExecId(execId).getStatus();
+                    // 如果异步任务更新为running的话再唤醒当前的定时任务
+                    if (status.equals(TaskStatusConstants.RUNNING)){
+                        break;
+                    }
+                    // 如果异步任务终止的话直接退出该方法
+                    if (!status.equals(TaskStatusConstants.CREATED)){
+                        return;
+                    }
+                    Threads.sleep(1000);
+                }
+
+                // 获取脚本容器内的pid
+                String script = CmdUtils.latestScriptPidCmd("grep python");
+                String containerId = getExecInfoByExecId(execId).getContainerId();
+                String rsp = execSimpleCmd(containerId, script);
+                if (!StringUtils.isEmpty(rsp)){
+                    String pid = StringUtils.matchNumber(rsp);
+                    ExecInfo info = getExecInfoByExecId(execId);
+                    info.setPid(pid);
+                    execInfoDao.save(info);
+                    // System.out.println(pid);
+                    // script = CmdUtils.killScriptCmd(pid);
+                    // rsp = execSimpleCmd(execId, script);
+                }
+            }
+        };
+
+        ThreadPoolManager.instance().schedule(task2);
     }
 
 

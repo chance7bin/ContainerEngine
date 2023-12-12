@@ -4,12 +4,17 @@ import com.binbin.containerengine.constant.FileConstants;
 import com.binbin.containerengine.entity.dto.file.FileDTO;
 import com.binbin.containerengine.entity.po.FileInfo;
 import com.binbin.containerengine.exception.ServiceException;
+import com.binbin.containerengine.service.IDockerService;
 import com.binbin.containerengine.service.IFileService;
 import com.binbin.containerengine.utils.DateUtils;
+import com.binbin.containerengine.utils.DockerUtils;
 import com.binbin.containerengine.utils.StringUtils;
+import com.binbin.containerengine.utils.file.FileUtils;
 import com.binbin.containerengine.utils.uuid.UUID;
+import com.github.dockerjava.api.DockerClient;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.implementation.bytecode.constant.FieldConstant;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,6 +34,12 @@ public class FileServiceImpl implements IFileService {
 
     @Value("${file.save-path}")
     private String savePath;
+
+    @Autowired
+    DockerClient dockerClient;
+
+    @Autowired
+    IDockerService dockerService;
 
     @Override
     public Long uploadFiles(MultipartFile file) {
@@ -59,7 +70,17 @@ public class FileServiceImpl implements IFileService {
 
     @Override
     public Long uploadFiles(FileDTO fileDTO){
-        String path = savePath + FileConstants.FILE_PATH_SEPARATOR + fileDTO.getPath();
+
+        // 路径以年月分隔
+        int year = DateUtils.getYear();
+        int month = DateUtils.getMonth();
+        String separator = FileConstants.FILE_PATH_SEPARATOR;
+        // String path = savePath + separator + year + separator + month + separator + fileDTO.getPath();
+        String path = savePath + fileDTO.getPath();
+        // 如果有containerId，把文件上传到containerId文件夹下
+        if (StringUtils.isNotEmpty(fileDTO.getContainerId())){
+            path = savePath + separator + fileDTO.getContainerId() + separator + fileDTO.getPath();
+        }
         File newFile = new File(path);
 
         // 判断文件是否允许覆盖
@@ -83,8 +104,29 @@ public class FileServiceImpl implements IFileService {
         // FileInfo fileInfo = new FileInfo();
         // ...
 
+        // 拷贝文件到容器里
+        if (FileConstants.CONTAINER.equals(fileDTO.getLocation())){
+            // 先在容器里把父文件夹创建出来
+            String containerPath = FileUtils.getDirPath(fileDTO.getPath());
+            dockerService.createFolderInContainer(fileDTO.getContainerId(), containerPath);
+            copyFileToContainer(fileDTO.getContainerId(), path, containerPath);
+        }
+
+
         return 1L;
     }
+
+    @Override
+    public void copyFileToContainer(String containerId, String hostPath, String remotePath) {
+        DockerUtils.copyArchiveToContainer(dockerClient, containerId, hostPath, remotePath);
+    }
+
+
+    @Override
+    public void copyFileFromContainer(String containerId, String remotePath, String hostPath) {
+        DockerUtils.copyArchiveFromContainer(dockerClient, containerId, remotePath, hostPath);
+    }
+
 
     @Override
     public InputStream getFileInputStream(Long id) {

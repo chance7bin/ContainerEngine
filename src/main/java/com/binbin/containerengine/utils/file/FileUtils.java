@@ -634,6 +634,27 @@ public class FileUtils extends org.apache.commons.io.FileUtils
     }
 
 
+    /**
+     * 根据文件决定路径获取该文件的文件夹路径
+     * @param path 文件路径
+     * @return {@link String} 父目录
+     */
+    public static String getDirPath(String path) {
+        // 截取最后一个/前面的内容
+        return path.substring(0, path.lastIndexOf("/"));
+    }
+
+
+    /**
+     * 根据文件路径创建父目录
+     * @param path 文件路径
+     */
+    public static void createParentDir(String path) {
+        File file = new File(path);
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
+        }
+    }
 
 
 

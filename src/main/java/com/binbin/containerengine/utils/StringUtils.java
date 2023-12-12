@@ -5,6 +5,8 @@ import com.binbin.containerengine.utils.text.StrFormatter;
 import org.springframework.util.AntPathMatcher;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 字符串工具类
@@ -576,4 +578,21 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils
         }
         return sb.toString();
     }
+    
+    /**
+     * 获取字符串中的数字
+     * @param str 待匹配的字符串
+     * @return 字符串中的第一个数字字符串
+     */
+    public static String matchNumber(String str){
+        String regex = "\\d+"; // 匹配一个或多个数字
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(str);
+        String number = null;
+        if (matcher.find()) {
+            number = matcher.group(); // 获取匹配到的数字
+        }
+        return number;
+    }
+    
 }

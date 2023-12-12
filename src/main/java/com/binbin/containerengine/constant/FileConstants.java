@@ -30,4 +30,16 @@ public class FileConstants {
      * 不覆盖
      */
     public final static String UNCOVER = "uncover";
+
+
+    /**
+     * 本地存储
+     */
+    public final static String LOCAL = "local";
+
+    /**
+     * 容器存储
+     */
+    public final static String CONTAINER = "container";
+
 }

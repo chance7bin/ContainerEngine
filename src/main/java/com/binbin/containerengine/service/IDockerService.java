@@ -110,4 +110,12 @@ public interface IDockerService {
     InspectExecResponse inspectExecCmd(String execId);
 
     boolean getExecIfDone(String execId);
+
+    // 测试入口
+    void test();
+
+
+    // 在容器内部创建文件夹
+    void createFolderInContainer(String containerId, String folderPath);
+
 }

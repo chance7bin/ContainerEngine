@@ -31,4 +31,7 @@ public class ExecInfo extends BaseEntity {
 
     private String stderr;
 
+    /** 容器内执行脚本的pid */
+    private String pid;
+
 }

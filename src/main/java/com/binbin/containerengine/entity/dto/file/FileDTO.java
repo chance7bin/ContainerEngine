@@ -28,4 +28,17 @@ public class FileDTO {
     MultipartFile file;
 
 
+    /**
+     * 非必选，存储位置
+     * 参数值：local:本地；container:容器
+     * 默认：local
+     */
+    String location = FileConstants.LOCAL;
+
+    /**
+     * 非必选，容器id
+     */
+    String containerId;
+
+
 }
