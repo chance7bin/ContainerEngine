@@ -18,19 +18,19 @@ public class ContainerInfo extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     /** 容器id */
-    Long containerId;
+    // Long containerId;
 
     /** 对应docker中的容器实例id */
     String containerInsId;
 
-    /** 容器名 (由镜像名以及容器id组成) */
+    /** 容器名*/
     String containerName;
 
     /** 镜像名 pull imageName */
     String imageName;
 
     /** 镜像id */
-    Long imageId;
+    String imageId;
 
     /** 容器对外暴露端口 */
     Integer containerExportPort;
@@ -45,7 +45,7 @@ public class ContainerInfo extends BaseEntity {
     String hostMAC;
 
     /** 挂载数据卷列表 宿主机目录中表示的只是相对路径 实际路径需加上${repository} */
-    List<String> volumeList = new ArrayList<>();
+    List<String> volumeList;
 
     /** 启动命令 */
     List<String> cmd;

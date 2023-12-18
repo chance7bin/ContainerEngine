@@ -16,32 +16,37 @@ public class ImageInfo extends BaseEntity {
     /** 数据库中的镜像id */
     // Long id;
 
-    /** docker中的镜像id */
-    String imageId;
+    /** docker中的镜像id sha256 */
+    String sha256;
 
     /** 镜像名 */
     String imageName;
 
+    /** md5 */
+    String md5;
+
     /** 镜像标签 */
-    String tag;
+    // String tag;
 
     /** 镜像名:标签 */
-    String repoTags;
+    // String repoTags;
 
     /** 镜像大小 */
-    Long size;
+    // Long size;
 
     /** 镜像状态 */
-    String status = ImageStatus.INIT;
+    // String status = ImageStatus.INIT;
 
     /** 镜像所在仓库地址 */
-    String registryUrl;
+    // String registryUrl;
 
     /** commit次数，不得超过127次 */
-    int commitCount = 0;
+    // int commitCount = 0;
 
     /** 是否删除 */
-    boolean delFlag;
+    // boolean delFlag;
+
+
 
 
 }

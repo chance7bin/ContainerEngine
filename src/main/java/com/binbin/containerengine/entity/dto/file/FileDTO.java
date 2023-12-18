@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileDTO {
 
     /**
-     * 必选，文件绝对路径
+     * 必选，文件相对路径
      */
     String path;
 

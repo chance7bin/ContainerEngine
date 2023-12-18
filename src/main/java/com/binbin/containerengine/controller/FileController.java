@@ -8,6 +8,7 @@ import com.binbin.containerengine.entity.po.FileInfo;
 import com.binbin.containerengine.exception.ServiceException;
 import com.binbin.containerengine.service.IFileService;
 import com.binbin.containerengine.utils.EncodingUtils;
+import com.binbin.containerengine.utils.StringUtils;
 import com.binbin.containerengine.utils.file.FileUtils;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +76,12 @@ public class FileController {
         if (containerId != null){
             fileDTO.setContainerId(containerId);
         }
+        // 如果有containerId，把文件上传到containerId文件夹下
+        if (StringUtils.isNotEmpty(fileDTO.getContainerId())){
+            String separator = FileConstants.FILE_PATH_SEPARATOR;
+            path = separator + fileDTO.getContainerId() + fileDTO.getPath();
+        }
+        fileDTO.setPath(path);
         fileService.uploadFiles(fileDTO);
         return ApiResponse.success("upload success");
     }

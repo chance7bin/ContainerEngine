@@ -1,6 +1,9 @@
 package com.binbin.containerengine.service.impl;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.crypto.SecureUtil;
 import com.binbin.containerengine.constant.FileConstants;
+import com.binbin.containerengine.dao.FileInfoDao;
 import com.binbin.containerengine.entity.dto.file.FileDTO;
 import com.binbin.containerengine.entity.po.FileInfo;
 import com.binbin.containerengine.exception.ServiceException;
@@ -9,6 +12,7 @@ import com.binbin.containerengine.service.IFileService;
 import com.binbin.containerengine.utils.DateUtils;
 import com.binbin.containerengine.utils.DockerUtils;
 import com.binbin.containerengine.utils.StringUtils;
+import com.binbin.containerengine.utils.file.FileTypeUtils;
 import com.binbin.containerengine.utils.file.FileUtils;
 import com.binbin.containerengine.utils.uuid.UUID;
 import com.github.dockerjava.api.DockerClient;
@@ -41,8 +45,11 @@ public class FileServiceImpl implements IFileService {
     @Autowired
     IDockerService dockerService;
 
+    @Autowired
+    FileInfoDao fileInfoDao;
+
     @Override
-    public Long uploadFiles(MultipartFile file) {
+    public String uploadFiles(MultipartFile file) {
         String fileName = file.getOriginalFilename();
         // 文件名非空校验
         if (StringUtils.isEmpty(fileName)) {
@@ -69,19 +76,11 @@ public class FileServiceImpl implements IFileService {
     }
 
     @Override
-    public Long uploadFiles(FileDTO fileDTO){
+    public String uploadFiles(FileDTO fileDTO){
 
-        // 路径以年月分隔
-        int year = DateUtils.getYear();
-        int month = DateUtils.getMonth();
-        String separator = FileConstants.FILE_PATH_SEPARATOR;
-        // String path = savePath + separator + year + separator + month + separator + fileDTO.getPath();
         String path = savePath + fileDTO.getPath();
-        // 如果有containerId，把文件上传到containerId文件夹下
-        if (StringUtils.isNotEmpty(fileDTO.getContainerId())){
-            path = savePath + separator + fileDTO.getContainerId() + separator + fileDTO.getPath();
-        }
         File newFile = new File(path);
+        String separator = FileConstants.FILE_PATH_SEPARATOR;
 
         // 判断文件是否允许覆盖
         if (newFile.exists() && FileConstants.UNCOVER.equals(fileDTO.getCover())) {
@@ -101,19 +100,30 @@ public class FileServiceImpl implements IFileService {
         }
 
         // 保存文件信息
-        // FileInfo fileInfo = new FileInfo();
-        // ...
+        FileInfo fileInfo = new FileInfo();
+        // 获取文件名
+        String fileName = fileDTO.getFile().getOriginalFilename();
+        fileInfo.setFileName(fileName);
+        // 根据savePath截取文件路径
+        String filePath = path.substring(savePath.length());
+        fileInfo.setFilePath(filePath);
+        fileInfo.setMd5(SecureUtil.md5(newFile));
+        fileInfo.setSize(String.valueOf(FileUtil.size(newFile)));
+        fileInfo.setSuffix(FileTypeUtils.getFileType(fileName));
+        fileInfoDao.insert(fileInfo);
 
         // 拷贝文件到容器里
         if (FileConstants.CONTAINER.equals(fileDTO.getLocation())){
             // 先在容器里把父文件夹创建出来
             String containerPath = FileUtils.getDirPath(fileDTO.getPath());
+            // 截取文件路径 separator + fileDTO.getContainerId()
+            String prefix = separator + fileDTO.getContainerId();
+            containerPath = containerPath.substring(prefix.length());
             dockerService.createFolderInContainer(fileDTO.getContainerId(), containerPath);
             copyFileToContainer(fileDTO.getContainerId(), path, containerPath);
         }
 
-
-        return 1L;
+        return fileInfo.getId();
     }
 
     @Override

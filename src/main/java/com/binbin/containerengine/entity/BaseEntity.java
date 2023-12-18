@@ -14,7 +14,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * @Description Entity基类
+ * Entity基类
+ *
  * @author bin
  * @date 2022/08/22
  */

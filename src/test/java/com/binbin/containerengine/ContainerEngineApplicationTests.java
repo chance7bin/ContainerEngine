@@ -7,6 +7,7 @@ import com.binbin.containerengine.constant.TaskStatusConstants;
 import com.binbin.containerengine.dao.ExecInfoDao;
 import com.binbin.containerengine.entity.po.ExecInfo;
 import com.binbin.containerengine.service.IDockerService;
+import com.binbin.containerengine.utils.CmdUtils;
 import com.binbin.containerengine.utils.StringUtils;
 import com.binbin.containerengine.utils.Threads;
 import com.binbin.containerengine.utils.file.FileUtils;
@@ -91,7 +92,17 @@ class ContainerEngineApplicationTests {
     @Test
     void testCmd(){
 
-        dockerService.test();
+        // String insId = "f8d4db1b87e1e2be84ae51d9ac7dd90dfaf181aa052ea2ed552b68a75f4ed027";
+        // // String script = "echo 123";
+        // String script = CmdUtils.latestScriptPidCmd("grep python");
+        // String rsp = execSimpleCmd(insId, script);
+        // if (!StringUtils.isEmpty(rsp)){
+        //     String pid = StringUtils.matchNumber(rsp);
+        //     System.out.println(pid);
+        //     script = CmdUtils.killScriptCmd(pid);
+        //     rsp = execSimpleCmd(insId, script);
+        //     System.out.println(rsp);
+        // }
 
     }
 
@@ -154,23 +165,8 @@ class ContainerEngineApplicationTests {
         tis.close();
     }
 
-    // @SneakyThrows(IOException.class)
-    // public void copyFileToContainer(Transferable transferable, String containerPath) {
-    //     try (
-    //         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    //         TarArchiveOutputStream tarArchive = new TarArchiveOutputStream(byteArrayOutputStream)
-    //     ) {
-    //         tarArchive.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
-    //         int lastSlashIndex = StringUtils.removeEnd(containerPath, "/").lastIndexOf("/");
-    //         String extractArchiveTo = containerPath.substring(0, lastSlashIndex + 1);
-    //         String pathInArchive = containerPath.substring(lastSlashIndex + 1);
-    //         transferable.transferTo(tarArchive, pathInArchive);
-    //         tarArchive.finish();
-    //         dockerClient
-    //             .copyArchiveToContainerCmd(containerId)
-    //             .withTarInputStream(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()))
-    //             .withRemotePath(extractArchiveTo)
-    //             .exec();
-    //     }
-    // }
+    @Test
+    void testLoadImage(){
+        dockerService.loadImage("E:\\container-engine\\file\\image\\cw_env.tar");
+    }
 }

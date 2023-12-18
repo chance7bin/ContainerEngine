@@ -15,17 +15,17 @@ public interface IFileService {
      * 小文件上传
      *
      * @param file 文件
-     * @return {@link Long} 上传后返回的fileId
+     * @return {@link String} 上传后返回的fileId
      */
-    Long uploadFiles(MultipartFile file);
+    String uploadFiles(MultipartFile file);
 
     /**
      * 小文件上传
      *
      * @param fileDTO 文件传输对象
-     * @return {@link Long} 上传后返回的fileId
+     * @return {@link String} 上传后返回的fileId
      */
-    Long uploadFiles(FileDTO fileDTO);
+    String uploadFiles(FileDTO fileDTO);
 
     /**
      * 获取文件输入流

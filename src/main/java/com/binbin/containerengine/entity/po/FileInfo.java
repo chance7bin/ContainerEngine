@@ -1,5 +1,6 @@
 package com.binbin.containerengine.entity.po;
 
+import com.binbin.containerengine.entity.BaseEntity;
 import lombok.Data;
 
 /**
@@ -7,15 +8,15 @@ import lombok.Data;
  * @date 2023/12/01
  */
 @Data
-public class FileInfo {
+public class FileInfo extends BaseEntity {
 
     /** 文件ID */
-    private Long fileId;
+    // private Long fileId;
 
     /** 文件名 */
     private String fileName;
 
-    /** 文件路径 真实的文件路径的文件名为 [{md5}_{fileName}] */
+    /** 文件路径 */
     private String filePath;
 
     /** 文件后缀 */

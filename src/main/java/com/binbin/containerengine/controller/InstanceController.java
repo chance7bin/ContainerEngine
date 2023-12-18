@@ -1,9 +1,13 @@
 package com.binbin.containerengine.controller;
 
 import com.binbin.containerengine.controller.common.BaseController;
+import com.binbin.containerengine.dao.ContainerInfoDao;
 import com.binbin.containerengine.entity.dto.ApiResponse;
+import com.binbin.containerengine.entity.dto.StartContainerDTO;
 import com.binbin.containerengine.entity.dto.docker.ExecDTO;
 import com.binbin.containerengine.entity.po.ExecInfo;
+import com.binbin.containerengine.entity.po.docker.ContainerInfo;
+import com.binbin.containerengine.service.IContainerService;
 import com.binbin.containerengine.service.IDockerService;
 import com.github.dockerjava.api.command.InspectExecResponse;
 import io.swagger.annotations.ApiOperation;
@@ -21,6 +25,12 @@ public class InstanceController extends BaseController {
 
     @Autowired
     IDockerService dockerService;
+
+    @Autowired
+    IContainerService containerService;
+
+    @Autowired
+    ContainerInfoDao containerInfoDao;
 
     // 测试接口
     @ApiOperation(value = "测试接口")
@@ -71,5 +81,20 @@ public class InstanceController extends BaseController {
     public ApiResponse inspectExecCmd(@RequestParam String execId) {
         InspectExecResponse response = dockerService.inspectExecCmd(execId);
         return ApiResponse.success(response);
+    }
+
+    @ApiOperation(value = "启动容器实例")
+    @PostMapping("/task/actions/start")
+    public ApiResponse startContainer(@RequestBody StartContainerDTO dto) {
+
+        if (!dto.isNewContainer()){
+            ContainerInfo containerInfo = containerInfoDao.findFirstByImageId(dto.getImageId());
+            if (containerInfo != null) {
+                return ApiResponse.success(containerInfo.getContainerInsId());
+            }
+        }
+
+        String insId = containerService.startContainer(dto.getImageId());
+        return ApiResponse.success(insId);
     }
 }

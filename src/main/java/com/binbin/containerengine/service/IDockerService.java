@@ -7,6 +7,7 @@ import com.binbin.containerengine.entity.po.ExecInfo;
 import com.binbin.containerengine.entity.po.docker.ContainerInfo;
 import com.binbin.containerengine.entity.po.docker.ImageInfo;
 import com.github.dockerjava.api.command.InspectExecResponse;
+import com.github.dockerjava.api.model.Image;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,7 +30,7 @@ public interface IDockerService {
     ImageInfo inspectImage(String sha256);
 
     //获取docker镜像列表
-    List<ImageInfo> listImages();
+    List<Image> listImages();
 
     //获取docker容器列表
     List<ContainerInfo> listContainers();
@@ -117,5 +118,15 @@ public interface IDockerService {
 
     // 在容器内部创建文件夹
     void createFolderInContainer(String containerId, String folderPath);
+
+
+    /**
+     * 将镜像导入到docker中
+     *
+     * @param path 容器压缩包路径
+     * @return {@link String} 导入的镜像名 [name:tag]
+     * @author 7bin
+     **/
+    String loadImage(String path);
 
 }

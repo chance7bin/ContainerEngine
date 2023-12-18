@@ -32,9 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledFuture;
@@ -70,8 +68,6 @@ public class DockerServiceImpl implements IDockerService {
         List<Container> list =  dockerClient.listContainersCmd()
             .withShowAll(true)
             .exec();
-
-        System.out.println();
 
     }
 
@@ -114,22 +110,22 @@ public class DockerServiceImpl implements IDockerService {
     public ImageInfo inspectImage(String sha256) {
         InspectImageResponse res = dockerClient.inspectImageCmd(sha256).exec();
         ImageInfo imageInfo = new ImageInfo();
-        imageInfo.setSize(res.getSize());
+        // imageInfo.setSize(res.getSize());
         return imageInfo;
     }
 
 
     @Override
-    public List<ImageInfo> listImages() {
+    public List<Image> listImages() {
 
         List<Image> images = dockerClient.listImagesCmd().exec();
 
-        List<ImageInfo> imageInfoDTOS = new ArrayList<>();
-        for (Image image : images) {
-            imageInfoDTOS.add(formatImageInfo(image));
-        }
+        // List<ImageInfo> imageInfoDTOS = new ArrayList<>();
+        // for (Image image : images) {
+        //     imageInfoDTOS.add(formatImageInfo(image));
+        // }
 
-        return imageInfoDTOS;
+        return images;
 
     }
 
@@ -143,9 +139,9 @@ public class DockerServiceImpl implements IDockerService {
     private ImageInfo formatImageInfo(Image image){
 
         ImageInfo imageInfo = new ImageInfo();
-        imageInfo.setRepoTags(image.getRepoTags()[0]);
-        Long size = image.getSize();
-        imageInfo.setSize(size);
+        // imageInfo.setRepoTags(image.getRepoTags()[0]);
+        // Long size = image.getSize();
+        // imageInfo.setSize(size);
 
         return imageInfo;
 
@@ -248,23 +244,52 @@ public class DockerServiceImpl implements IDockerService {
 
     @Override
     public void test(){
-        String insId = "f8d4db1b87e1e2be84ae51d9ac7dd90dfaf181aa052ea2ed552b68a75f4ed027";
-        // String script = "echo 123";
-        String script = CmdUtils.latestScriptPidCmd("grep python");
-        String rsp = execSimpleCmd(insId, script);
-        if (!StringUtils.isEmpty(rsp)){
-            String pid = StringUtils.matchNumber(rsp);
-            System.out.println(pid);
-            script = CmdUtils.killScriptCmd(pid);
-            rsp = execSimpleCmd(insId, script);
-            System.out.println(rsp);
-        }
+
     }
 
     @Override
     public void createFolderInContainer(String containerId, String folderPath){
         String script = CmdUtils.createDirCmd(folderPath);
         execSimpleCmd(containerId, script);
+    }
+
+    @Override
+    public String loadImage(String path) {
+
+        File file = new File(path);
+        if (!file.exists()){
+            throw new ServiceException("file not exist");
+        }
+
+        final String[] imageName = {null};
+
+        try {
+
+            // dockerClient.loadImageCmd(new FileInputStream(file)).exec();
+            // return true;
+
+            dockerClient.loadImageAsyncCmd(new FileInputStream(file))
+                .exec(new ResultCallback.Adapter<LoadResponseItem>() {
+                    @Override
+                    public void onNext(LoadResponseItem item) {
+                        String stream = item.getStream();
+                        // 截取"imageName:tag"字符串，并且把末尾的换行符去掉
+                        if (stream != null){
+                            imageName[0] = stream.substring(stream.indexOf("Loaded image: ") + 14, stream.length() - 1);
+                        }
+                    }
+                })
+                .awaitCompletion();
+
+
+            return imageName[0];
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return imageName[0];
+        }
+
+
     }
 
 
@@ -451,7 +476,8 @@ public class DockerServiceImpl implements IDockerService {
             execInfo.setExitCode(inspectInfo.getExitCodeLong());
             execInfo.setRunning(inspectInfo.isRunning());
             execInfo.setStatus(Objects.equals(inspectInfo.getExitCodeLong(), NORMAL_EXIT_CODE) ? TaskStatusConstants.FINISHED : TaskStatusConstants.FAILED);
-            execInfo.setStderr(stderr.toString());
+            // execInfo.setStderr(stderr.toString());
+            execInfo.setStderr("[ container inner exception: " + stderr.toString() + " ]");
             execInfoDao.save(execInfo);
 
         } catch (InterruptedException | RuntimeException e) {
@@ -459,7 +485,7 @@ public class DockerServiceImpl implements IDockerService {
             execInfo.setExitCode(1L);
             execInfo.setRunning(false);
             execInfo.setStatus(TaskStatusConstants.FAILED);
-            execInfo.setStderr(e.getMessage());
+            execInfo.setStderr("[ container inner exception: " + e.getMessage() + " ]");
             execInfoDao.save(execInfo);
 
             e.printStackTrace();
@@ -622,10 +648,12 @@ public class DockerServiceImpl implements IDockerService {
 
         //数据卷 Bind.parse
         List<Bind> binds = new ArrayList<>();
-        for (String volume : containerInfo.getVolumeList()) {
-            // volume = formatPathSupportDocker(repository + volume);
-            volume = formatPathSupportDocker(volume);
-            binds.add(Bind.parse(volume));
+        if (containerInfo.getVolumeList() != null){
+            for (String volume : containerInfo.getVolumeList()) {
+                // volume = formatPathSupportDocker(repository + volume);
+                volume = formatPathSupportDocker(volume);
+                binds.add(Bind.parse(volume));
+            }
         }
 
         //容器启动配置
@@ -664,7 +692,7 @@ public class DockerServiceImpl implements IDockerService {
 
         //创建
         CreateContainerResponse response = containerCmd.exec();
-        log.info("container instance id: " + response.getId());
+        // log.info("container instance id: " + response.getId());
         return response;
 
     }
