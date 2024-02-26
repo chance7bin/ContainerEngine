@@ -77,4 +77,18 @@ public class FileTypeUtils
         }
         return strFileExtendName;
     }
+
+    /**
+     * 判断文件是否是压缩包
+     * @param file 文件路径
+     */
+    public static Boolean isCompress(String file) {
+        String[] compress = {".zip", ".rar", ".7z", ".tar", ".gz", ".bz2"};
+        for (String s : compress) {
+            if (file.endsWith(s)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

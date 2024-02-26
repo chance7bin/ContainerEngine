@@ -1,7 +1,7 @@
 package com.binbin.containerengine.controller;
 
+import com.binbin.containerengine.constant.ContainerStatus;
 import com.binbin.containerengine.controller.common.BaseController;
-import com.binbin.containerengine.dao.ContainerInfoDao;
 import com.binbin.containerengine.entity.dto.ApiResponse;
 import com.binbin.containerengine.entity.dto.StartContainerDTO;
 import com.binbin.containerengine.entity.dto.docker.ExecDTO;
@@ -29,8 +29,6 @@ public class InstanceController extends BaseController {
     @Autowired
     IContainerService containerService;
 
-    @Autowired
-    ContainerInfoDao containerInfoDao;
 
     // 测试接口
     @ApiOperation(value = "测试接口")
@@ -88,13 +86,20 @@ public class InstanceController extends BaseController {
     public ApiResponse startContainer(@RequestBody StartContainerDTO dto) {
 
         if (!dto.isNewContainer()){
-            ContainerInfo containerInfo = containerInfoDao.findFirstByImageId(dto.getImageId());
+            ContainerInfo containerInfo = containerService.findFirstByImageIdAndStatus(dto.getImageId(), ContainerStatus.RUNNING);
             if (containerInfo != null) {
                 return ApiResponse.success(containerInfo.getContainerInsId());
             }
         }
 
-        String insId = containerService.startContainer(dto.getImageId());
+        String insId = containerService.startContainer(dto);
         return ApiResponse.success(insId);
+    }
+
+    @ApiOperation(value = "删除容器实例")
+    @PostMapping("/task/actions/delete")
+    public ApiResponse deleteContainer(@RequestParam String insId) {
+        containerService.deleteContainer(insId);
+        return ApiResponse.success();
     }
 }

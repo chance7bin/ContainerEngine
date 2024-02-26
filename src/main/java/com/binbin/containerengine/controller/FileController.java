@@ -58,6 +58,7 @@ public class FileController {
         @RequestParam("path") String path,
         @RequestParam(value = "cover", required = false) String cover,
         @RequestParam(value = "location", required = false) String location,
+        @RequestParam(value = "uncompress", required = false) Boolean uncompress,
         @RequestParam(value = "containerId", required = false) String containerId
     ) {
         if (file == null || file.isEmpty()) {
@@ -67,6 +68,7 @@ public class FileController {
         fileDTO.setFile(file);
         fileDTO.setPath(path);
         fileDTO.setCover(cover);
+        fileDTO.setUncompress(uncompress);
         if (cover != null){
             fileDTO.setCover(cover);
         }
@@ -109,17 +111,16 @@ public class FileController {
 
         OutputStream outputStream = null;
         InputStream inputStream = null;
+        String zipPath = null;
+        String tmpPath = savePath + path;
         try {
             // FileInfo fileDetails = fileService.getFileDetails(id);
-
-
-            String tmpPath = savePath + path;
 
             if (FileConstants.CONTAINER.equals(location)){
 
                 // 把数据从容器里面拷贝出来
                 String separator = FileConstants.FILE_PATH_SEPARATOR;
-                tmpPath = savePath + separator + containerId + separator + path;
+                tmpPath = savePath + separator + containerId + path;
                 // 判断tmpPath的父文件夹是否存在，不存在则创建
                 FileUtils.createParentDir(tmpPath);
                 fileService.copyFileFromContainer(containerId, path, tmpPath);
@@ -127,6 +128,14 @@ public class FileController {
             }
 
             path = tmpPath;
+            // 判断path是否是文件夹，是的话打包成zip
+            if (FileUtils.isDirectory(path)){
+                zipPath = path + ".zip";
+                FileUtils.compress(path, zipPath);
+                path = zipPath;
+            }
+
+
 
             FileInfo fileDetails = new FileInfo();
             if (FileUtils.exist(path)) {
@@ -154,6 +163,19 @@ public class FileController {
                 if (outputStream != null) {
                     outputStream.close();
                 }
+
+                // 删除zip临时文件
+                if (zipPath != null){
+                    FileUtils.delete(zipPath);
+                }
+
+                // 删除拷贝至宿主机的容器内部文件
+                if (FileConstants.CONTAINER.equals(location)){
+                    FileUtils.delete(tmpPath);
+                }
+
+
+
             } catch (IOException e) {
                 e.printStackTrace();
             }

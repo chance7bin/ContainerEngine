@@ -1,7 +1,6 @@
 package com.binbin.containerengine.config;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.model.Info;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
@@ -44,7 +43,6 @@ public class DockerConfig {
         DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
             .withDockerHost(host)
             // .withApiVersion(apiVersion)
-            // .withDockerHost(host)
             .build();
         //创建DockerHttpClient
         DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()

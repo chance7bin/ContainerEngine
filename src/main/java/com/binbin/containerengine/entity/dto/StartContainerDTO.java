@@ -15,4 +15,7 @@ public class StartContainerDTO {
     /** 是否需要创建新的容器 */
     boolean newContainer;
 
+    /** 启动命令 */
+    String cmd;
+
 }

@@ -40,5 +40,14 @@ public class FileDTO {
      */
     String containerId;
 
+    /**
+     * 非必选，md5
+     */
+    String md5;
+
+    /**
+     * 非必选，文件是否需要解压
+     */
+    Boolean uncompress = false;
 
 }

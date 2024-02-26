@@ -17,7 +17,6 @@ import com.binbin.containerengine.utils.file.FileUtils;
 import com.binbin.containerengine.utils.uuid.UUID;
 import com.github.dockerjava.api.DockerClient;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.implementation.bytecode.constant.FieldConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -79,51 +78,67 @@ public class FileServiceImpl implements IFileService {
     public String uploadFiles(FileDTO fileDTO){
 
         String path = savePath + fileDTO.getPath();
-        File newFile = new File(path);
+        File file = new File(path);
         String separator = FileConstants.FILE_PATH_SEPARATOR;
 
         // 判断文件是否允许覆盖
-        if (newFile.exists() && FileConstants.UNCOVER.equals(fileDTO.getCover())) {
+        if (file.exists() && FileConstants.UNCOVER.equals(fileDTO.getCover())) {
             throw new ServiceException("file already exists");
         }
 
         // 如果该存储路径不存在则新建存储路径
-        if (!newFile.getParentFile().exists()) {
-            newFile.getParentFile().mkdirs();
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
         }
         // 文件写入
         try {
-            fileDTO.getFile().transferTo(newFile);
+            fileDTO.getFile().transferTo(file);
         } catch (IOException e) {
             // log.error("文件写入异常");
             throw new ServiceException("文件写入异常");
         }
 
-        // 保存文件信息
-        FileInfo fileInfo = new FileInfo();
-        // 获取文件名
-        String fileName = fileDTO.getFile().getOriginalFilename();
-        fileInfo.setFileName(fileName);
-        // 根据savePath截取文件路径
-        String filePath = path.substring(savePath.length());
-        fileInfo.setFilePath(filePath);
-        fileInfo.setMd5(SecureUtil.md5(newFile));
-        fileInfo.setSize(String.valueOf(FileUtil.size(newFile)));
-        fileInfo.setSuffix(FileTypeUtils.getFileType(fileName));
-        fileInfoDao.insert(fileInfo);
-
-        // 拷贝文件到容器里
+        // 如果上传到容器内部，将文件拷贝到容器里
         if (FileConstants.CONTAINER.equals(fileDTO.getLocation())){
+            String tmpPath = path;
+            // 如果上传的是压缩包则先解压
+            if (FileTypeUtils.isCompress(path) && fileDTO.getUncompress()) {
+                tmpPath = FileUtils.unCompress(path);
+                // 删除压缩包
+                FileUtil.del(file);
+            }
+
             // 先在容器里把父文件夹创建出来
-            String containerPath = FileUtils.getDirPath(fileDTO.getPath());
-            // 截取文件路径 separator + fileDTO.getContainerId()
-            String prefix = separator + fileDTO.getContainerId();
+            String containerPath = FileUtils.getDirPath(tmpPath);
+            // 截取文件路径
+            String prefix = savePath + separator + fileDTO.getContainerId();
             containerPath = containerPath.substring(prefix.length());
             dockerService.createFolderInContainer(fileDTO.getContainerId(), containerPath);
-            copyFileToContainer(fileDTO.getContainerId(), path, containerPath);
+            copyFileToContainer(fileDTO.getContainerId(), tmpPath, containerPath);
+            // 删除宿主机文件
+            FileUtil.del(tmpPath);
+        } else {
+            // 保存文件信息
+            FileInfo fileInfo = new FileInfo();
+            // 获取文件名
+            String fileName = fileDTO.getFile().getOriginalFilename();
+            fileInfo.setFileName(fileName);
+            // 根据savePath截取文件路径
+            String filePath = path.substring(savePath.length());
+            fileInfo.setFilePath(filePath);
+            // 如果md5值为空则计算md5值
+            if (StringUtils.isEmpty(fileDTO.getMd5())) {
+                fileInfo.setMd5(SecureUtil.md5(file));
+            } else {
+                fileInfo.setMd5(fileDTO.getMd5());
+            }
+            fileInfo.setSize(String.valueOf(FileUtil.size(file)));
+            fileInfo.setSuffix(FileTypeUtils.getFileType(fileName));
+            fileInfoDao.insert(fileInfo);
+            return fileInfo.getId();
         }
 
-        return fileInfo.getId();
+        return null;
     }
 
     @Override

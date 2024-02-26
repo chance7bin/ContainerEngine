@@ -1,7 +1,7 @@
 package com.binbin.containerengine.dao;
 
-import com.binbin.containerengine.entity.po.FileInfo;
 import com.binbin.containerengine.entity.po.docker.ContainerInfo;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 /**
@@ -11,5 +11,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 public interface ContainerInfoDao extends MongoRepository<ContainerInfo, String> {
 
     ContainerInfo findFirstByImageId(String imageId);
+
+    ContainerInfo findFirstByImageIdAndStatus(String imageId, String statu, Sort sort);
 
 }

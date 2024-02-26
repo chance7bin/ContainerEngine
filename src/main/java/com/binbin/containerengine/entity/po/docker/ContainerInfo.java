@@ -3,7 +3,6 @@ package com.binbin.containerengine.entity.po.docker;
 import com.binbin.containerengine.entity.BaseEntity;
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,8 +13,6 @@ import java.util.List;
  */
 @Data
 public class ContainerInfo extends BaseEntity {
-
-    private static final long serialVersionUID = 1L;
 
     /** 容器id */
     // Long containerId;

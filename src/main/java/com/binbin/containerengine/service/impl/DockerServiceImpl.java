@@ -18,7 +18,6 @@ import com.binbin.containerengine.utils.StringUtils;
 import com.binbin.containerengine.utils.TerminalUtils;
 import com.binbin.containerengine.utils.Threads;
 import com.binbin.containerengine.utils.file.FileUtils;
-import com.binbin.containerengine.utils.uuid.SnowFlake;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.async.ResultCallbackTemplate;
@@ -26,14 +25,15 @@ import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -477,7 +477,9 @@ public class DockerServiceImpl implements IDockerService {
             execInfo.setRunning(inspectInfo.isRunning());
             execInfo.setStatus(Objects.equals(inspectInfo.getExitCodeLong(), NORMAL_EXIT_CODE) ? TaskStatusConstants.FINISHED : TaskStatusConstants.FAILED);
             // execInfo.setStderr(stderr.toString());
-            execInfo.setStderr("[ container inner exception: " + stderr.toString() + " ]");
+            if (stderr.toString().length() > 0){
+                execInfo.setStderr("[ container inner exception ] " + stderr.toString());
+            }
             execInfoDao.save(execInfo);
 
         } catch (InterruptedException | RuntimeException e) {
@@ -485,7 +487,7 @@ public class DockerServiceImpl implements IDockerService {
             execInfo.setExitCode(1L);
             execInfo.setRunning(false);
             execInfo.setStatus(TaskStatusConstants.FAILED);
-            execInfo.setStderr("[ container inner exception: " + e.getMessage() + " ]");
+            execInfo.setStderr("[ container inner exception ] " + e.getMessage());
             execInfoDao.save(execInfo);
 
             e.printStackTrace();

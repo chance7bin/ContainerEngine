@@ -3,15 +3,23 @@ package com.binbin.containerengine.service.impl;
 import com.binbin.containerengine.constant.ContainerConstants;
 import com.binbin.containerengine.dao.ContainerInfoDao;
 import com.binbin.containerengine.dao.ImageInfoDao;
+import com.binbin.containerengine.dao.UpdateDao;
+import com.binbin.containerengine.entity.dto.StartContainerDTO;
 import com.binbin.containerengine.entity.po.docker.ContainerInfo;
 import com.binbin.containerengine.entity.po.docker.ImageInfo;
 import com.binbin.containerengine.exception.ServiceException;
 import com.binbin.containerengine.service.IContainerService;
 import com.binbin.containerengine.service.IDockerService;
+import com.binbin.containerengine.utils.StringUtils;
 import com.binbin.containerengine.utils.uuid.IdUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author 7bin
@@ -30,16 +38,27 @@ public class ContainerServiceImpl implements IContainerService {
     @Autowired
     ContainerInfoDao containerInfoDao;
 
-    @Override
-    public String startContainer(String imageId) {
+    @Autowired
+    UpdateDao updateDao;
 
-        ImageInfo imageInfo = imageInfoDao.findById(imageId).orElseThrow(() -> new ServiceException("image not found"));
+    @Override
+    public String startContainer(StartContainerDTO dto) {
+
+        ImageInfo imageInfo = imageInfoDao.findById(dto.getImageId()).orElseThrow(() -> new ServiceException("image not found"));
 
         ContainerInfo containerInfo = new ContainerInfo();
         containerInfo.setContainerName(IdUtils.fastUUID());
         containerInfo.setImageName(imageInfo.getImageName());
         containerInfo.setImageId(imageInfo.getId());
-        containerInfo.setCmd(ContainerConstants.RUN_DEFAULT_CMD);
+        // 设置容器启动参数
+        if (!StringUtils.isEmpty(dto.getCmd())){
+            String[] arr = dto.getCmd().split(" ");
+            List<String> arrList = new ArrayList<>(Arrays.asList(arr));
+            containerInfo.setCmd(arrList);
+        } else {
+            containerInfo.setCmd(ContainerConstants.RUN_DEFAULT_CMD);
+        }
+
         try {
 
             dockerService.createContainer(containerInfo);
@@ -59,5 +78,24 @@ public class ContainerServiceImpl implements IContainerService {
 
         }
 
+    }
+
+    @Override
+    public ContainerInfo findFirstByImageId(String imageId) {
+        return containerInfoDao.findFirstByImageId(imageId);
+    }
+
+    @Override
+    public ContainerInfo findFirstByImageIdAndStatus(String imageId, String status) {
+        // 按照createTime排序，取最近创建的
+        Sort sort = Sort.by(Sort.Order.desc("createTime"));
+        return containerInfoDao.findFirstByImageIdAndStatus(imageId, status, sort);
+    }
+
+    @Override
+    public void deleteContainer(String insId) {
+        dockerService.removeContainer(insId);
+        String status = dockerService.getContainerStatusByContainerInsId(insId);
+        updateDao.updateDelFlagAndStatusByInsId(insId, true, status);
     }
 }

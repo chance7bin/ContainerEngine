@@ -1,6 +1,7 @@
 package com.binbin.containerengine.utils.file;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.ZipUtil;
 import com.binbin.containerengine.utils.DateUtils;
 import com.binbin.containerengine.utils.StringUtils;
 import com.binbin.containerengine.utils.uuid.IdUtils;
@@ -180,20 +181,12 @@ public class FileUtils extends org.apache.commons.io.FileUtils
     /**
      * 删除文件
      * 
-     * @param filePath 文件
-     * @return
+     * @param path 文件路径
+     * @return 是否删除成功
      */
-    public static boolean deleteFile(String filePath)
+    public static boolean delete(String path)
     {
-        boolean flag = false;
-        File file = new File(filePath);
-        // 路径为文件且不为空则进行删除
-        if (file.isFile() && file.exists())
-        {
-            file.delete();
-            flag = true;
-        }
-        return flag;
+        return FileUtil.del(path);
     }
 
     /**
@@ -657,6 +650,64 @@ public class FileUtils extends org.apache.commons.io.FileUtils
     }
 
 
+    /**
+     * 解压压缩包
+     * @param file 压缩包路径
+     * @return {@link String} 解压后文件夹路径
+     */
+    public static String unCompress(String file) {
+        String target = file.substring(0, file.lastIndexOf("."));
+        if (file.endsWith(".zip")) {
+            ZipUtil.unzip(file, target);
+        } else if (file.endsWith(".rar")) {
+            // TODO
+        } else if (file.endsWith(".7z")) {
+            // TODO
+        } else if (file.endsWith(".tar")) {
+            // TODO
+        } else if (file.endsWith(".gz")) {
+            // TODO
+        } else if (file.endsWith(".bz2")) {
+            // TODO
+        }
+        return target;
+    }
 
+    /**
+     * 压缩文件夹
+     * @param source 源文件夹路径
+     * @param target 目标压缩包路径
+     */
+    public static void compress(String source, String target) {
+        if (target.endsWith(".zip")) {
+            ZipUtil.zip(source, target);
+        } else if (target.endsWith(".rar")) {
+            // TODO
+        } else if (target.endsWith(".7z")) {
+            // TODO
+        } else if (target.endsWith(".tar")) {
+            // TODO
+        } else if (target.endsWith(".gz")) {
+            // TODO
+        } else if (target.endsWith(".bz2")) {
+            // TODO
+        }
+    }
+
+    /**
+     * 判断是否为文件夹
+     * @param path 文件路径
+     */
+    public static Boolean isDirectory(String path) {
+        return FileUtil.isDirectory(path);
+    }
+
+    /**
+     * 判断是否为文件夹
+     * @param file 文件
+     */
+    public static Boolean isDirectory(File file) {
+        return FileUtil.isDirectory(file);
+    }
 
 }

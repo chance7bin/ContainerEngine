@@ -1,6 +1,5 @@
 package com.binbin.containerengine.utils;
 
-import com.binbin.containerengine.utils.uuid.IdUtils;
 import com.github.dockerjava.api.DockerClient;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -37,6 +36,7 @@ public class DockerUtils {
         TarArchiveInputStream tarStream = new TarArchiveInputStream(inputStream);
         unTar(tarStream, new File(hostPath));
 
+
     }
 
 
@@ -61,12 +61,15 @@ public class DockerUtils {
         try {
             TarArchiveEntry tarEntry = null;
             while ((tarEntry = tis.getNextTarEntry()) != null) {
+
+                File destFileCur = new File(destFile.getParentFile(), tarEntry.getName());
+
                 if (tarEntry.isDirectory()) {
-                    if (!destFile.exists()) {
-                        destFile.mkdirs();
+                    if (!destFileCur.exists()) {
+                        destFileCur.mkdirs();
                     }
                 } else {
-                    FileOutputStream fos = new FileOutputStream(destFile);
+                    FileOutputStream fos = new FileOutputStream(destFileCur);
                     IOUtils.copy(tis, fos);
                     fos.close();
                 }

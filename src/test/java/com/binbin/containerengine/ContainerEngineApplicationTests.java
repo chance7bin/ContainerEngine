@@ -1,36 +1,27 @@
 package com.binbin.containerengine;
 
-import cn.hutool.Hutool;
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.HashUtil;
 import com.binbin.containerengine.constant.TaskStatusConstants;
 import com.binbin.containerengine.dao.ExecInfoDao;
+import com.binbin.containerengine.dao.UpdateDao;
 import com.binbin.containerengine.entity.po.ExecInfo;
 import com.binbin.containerengine.service.IDockerService;
-import com.binbin.containerengine.utils.CmdUtils;
+import com.binbin.containerengine.service.IFileService;
 import com.binbin.containerengine.utils.StringUtils;
 import com.binbin.containerengine.utils.Threads;
 import com.binbin.containerengine.utils.file.FileUtils;
 import com.binbin.containerengine.utils.uuid.IdUtils;
-import com.binbin.containerengine.utils.uuid.UUID;
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateVolumeResponse;
-import com.github.dockerjava.api.command.InspectVolumeResponse;
-import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.awt.datatransfer.Transferable;
-import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 @SpringBootTest
 class ContainerEngineApplicationTests {
@@ -135,16 +126,23 @@ class ContainerEngineApplicationTests {
 
     }
 
+    @Autowired
+    IFileService fileService;
+
     @Test
     void copyArchiveToContainerCmd() {
 
-        String containerId = "d1c15a8e74fa40aae22014815143b53b8a8dbd567a6b655b5c8261de3ada02ba";
-        dockerClient.copyArchiveToContainerCmd(containerId)
-            .withHostResource("E:\\container-engine\\file\\test1\\123_out.pdf")
-            .withRemotePath("/home/tmpdir2") // 容器内文件夹路径（该路径必须存在），文件名默认为宿主机的文件名
-            .exec();
-        System.out.println("success");
+        // String containerId = "d1c15a8e74fa40aae22014815143b53b8a8dbd567a6b655b5c8261de3ada02ba";
+        // dockerClient.copyArchiveToContainerCmd(containerId)
+        //     .withHostResource("E:\\container-engine\\file\\test1\\123_out.pdf")
+        //     .withRemotePath("/home/tmpdir2") // 容器内文件夹路径（该路径必须存在），文件名默认为宿主机的文件名
+        //     .exec();
+        // System.out.println("success");
 
+        fileService.copyFileToContainer(
+            "f8d4db1b87e1e2be84ae51d9ac7dd90dfaf181aa052ea2ed552b68a75f4ed027",
+            "E:\\ModelServiceContainer\\seims\\SEIMS-master\\data\\youwuzhen\\data_prepare\\climate\\climate",
+            "/home/climate");
 
     }
 
@@ -169,4 +167,20 @@ class ContainerEngineApplicationTests {
     void testLoadImage(){
         dockerService.loadImage("E:\\container-engine\\file\\image\\cw_env.tar");
     }
+
+    @Test
+    void testUncompress(){
+        FileUtils.unCompress("E:\\ModelServiceContainer\\seims\\SEIMS-master\\data\\youwuzhen\\data_prepare\\climate\\climate.zip");
+    }
+
+    @Autowired
+    UpdateDao updateDao;
+
+    @Test
+    void testUpdateDao(){
+        // updateDao.updateDelFlagByInsId("f6e8513025324ac6439a0314c3eb59fa72efcdff0b60a1616e107276d3339d25", Boolean.TRUE);
+        String status = dockerService.getContainerStatusByContainerInsId("3123");
+        System.out.println(status);
+    }
+
 }
