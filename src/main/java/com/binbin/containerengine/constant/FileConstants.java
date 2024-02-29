@@ -42,4 +42,12 @@ public class FileConstants {
      */
     public final static String CONTAINER = "container";
 
+    /**
+     * 容器文件临时存储路径
+     */
+    public static String CONTAINER_TEMP_DIR(String containerId){
+        return "/instance/" + containerId;
+    };
+
+
 }

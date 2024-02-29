@@ -54,7 +54,13 @@ public class DockerConfig {
         //创建DockerClient
         DockerClient client = DockerClientImpl.getInstance(config, httpClient);
 
-        log.info("docker client connection successfully!");
+        try {
+            client.pingCmd().exec();
+            log.info("docker client connection successfully!");
+        } catch (Exception e) {
+            log.error("docker client connection failed!");
+            // throw new RuntimeException("docker client connection failed!");
+        }
 
         return client;
     }

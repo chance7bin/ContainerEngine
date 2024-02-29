@@ -129,4 +129,6 @@ public interface IDockerService {
      **/
     String loadImage(String path);
 
+    void ping();
+
 }

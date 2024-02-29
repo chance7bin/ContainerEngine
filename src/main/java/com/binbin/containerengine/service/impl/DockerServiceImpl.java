@@ -68,7 +68,6 @@ public class DockerServiceImpl implements IDockerService {
         List<Container> list =  dockerClient.listContainersCmd()
             .withShowAll(true)
             .exec();
-
     }
 
     @Override
@@ -290,6 +289,11 @@ public class DockerServiceImpl implements IDockerService {
         }
 
 
+    }
+
+    @Override
+    public void ping() {
+       dockerClient.pingCmd().exec();
     }
 
 

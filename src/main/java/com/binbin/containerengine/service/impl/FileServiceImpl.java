@@ -111,7 +111,7 @@ public class FileServiceImpl implements IFileService {
             // 先在容器里把父文件夹创建出来
             String containerPath = FileUtils.getDirPath(tmpPath);
             // 截取文件路径
-            String prefix = savePath + separator + fileDTO.getContainerId();
+            String prefix = savePath + FileConstants.CONTAINER_TEMP_DIR(fileDTO.getContainerId());
             containerPath = containerPath.substring(prefix.length());
             dockerService.createFolderInContainer(fileDTO.getContainerId(), containerPath);
             copyFileToContainer(fileDTO.getContainerId(), tmpPath, containerPath);

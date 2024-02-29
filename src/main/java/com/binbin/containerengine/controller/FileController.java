@@ -80,8 +80,7 @@ public class FileController {
         }
         // 如果有containerId，把文件上传到containerId文件夹下
         if (StringUtils.isNotEmpty(fileDTO.getContainerId())){
-            String separator = FileConstants.FILE_PATH_SEPARATOR;
-            path = separator + fileDTO.getContainerId() + fileDTO.getPath();
+            path = FileConstants.CONTAINER_TEMP_DIR(fileDTO.getContainerId()) + fileDTO.getPath();
         }
         fileDTO.setPath(path);
         fileService.uploadFiles(fileDTO);
@@ -119,8 +118,7 @@ public class FileController {
             if (FileConstants.CONTAINER.equals(location)){
 
                 // 把数据从容器里面拷贝出来
-                String separator = FileConstants.FILE_PATH_SEPARATOR;
-                tmpPath = savePath + separator + containerId + path;
+                tmpPath = savePath + FileConstants.CONTAINER_TEMP_DIR(containerId) + path;
                 // 判断tmpPath的父文件夹是否存在，不存在则创建
                 FileUtils.createParentDir(tmpPath);
                 fileService.copyFileFromContainer(containerId, path, tmpPath);
