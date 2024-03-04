@@ -11,6 +11,7 @@ import com.binbin.containerengine.utils.Threads;
 import com.binbin.containerengine.utils.file.FileUtils;
 import com.binbin.containerengine.utils.uuid.IdUtils;
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.model.Image;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
@@ -182,5 +183,13 @@ class ContainerEngineApplicationTests {
         String status = dockerService.getContainerStatusByContainerInsId("3123");
         System.out.println(status);
     }
+
+    @Test
+    void testImageInfo(){
+
+        Image image = dockerService.getImageByNameFromRepo("seims-ev:1.0");
+        System.out.println(image);
+    }
+
 
 }

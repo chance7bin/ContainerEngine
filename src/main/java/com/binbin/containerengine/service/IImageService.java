@@ -22,5 +22,13 @@ public interface IImageService {
      * @param md5 md5
      * @return {@link String} 镜像id
      */
-    boolean imageExist(String md5);
+    String imageExistByMd5(String md5);
+
+    /**
+     * 根据镜像名称判断镜像是否存在
+     *
+     * @param imageName 镜像名称
+     * @return {@link String} 镜像id
+     */
+    String imageExistByName(String imageName);
 }

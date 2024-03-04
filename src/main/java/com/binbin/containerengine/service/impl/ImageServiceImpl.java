@@ -4,7 +4,6 @@ import com.binbin.containerengine.constant.FileConstants;
 import com.binbin.containerengine.dao.FileInfoDao;
 import com.binbin.containerengine.dao.ImageInfoDao;
 import com.binbin.containerengine.entity.dto.file.FileDTO;
-import com.binbin.containerengine.entity.po.FileInfo;
 import com.binbin.containerengine.entity.po.docker.ImageInfo;
 import com.binbin.containerengine.service.IDockerService;
 import com.binbin.containerengine.service.IFileService;
@@ -44,8 +43,8 @@ public class ImageServiceImpl implements IImageService {
     @Override
     public String loadImage(MultipartFile file, String md5) {
 
-        if (imageInfoDao.findByMd5(md5) != null) {
-            return imageInfoDao.findByMd5(md5).getId();
+        if (imageInfoDao.findFirstByMd5(md5) != null) {
+            return imageInfoDao.findFirstByMd5(md5).getId();
         }
 
         FileDTO fileDTO = new FileDTO();
@@ -53,10 +52,10 @@ public class ImageServiceImpl implements IImageService {
         fileDTO.setPath("/image/" + file.getOriginalFilename());
         fileDTO.setCover(FileConstants.COVER);
         String fileId;
-        if (fileInfoDao.findByMd5(md5) == null) {
+        if (fileInfoDao.findFirstByMd5(md5) == null) {
             fileId = fileService.uploadFiles(fileDTO);
         } else {
-            fileId = fileInfoDao.findByMd5(md5).getId();
+            fileId = fileInfoDao.findFirstByMd5(md5).getId();
         }
 
         fileInfoDao.findById(fileId).ifPresent(fileInfo -> {
@@ -68,7 +67,14 @@ public class ImageServiceImpl implements IImageService {
                 return;
             }
 
-            ImageInfo imageInfo = new ImageInfo();
+            ImageInfo imageInfo = imageInfoDao.findFirstByImageName(imageName);
+            if (imageInfo != null) {
+                imageInfo.setMd5(md5);
+                imageInfoDao.save(imageInfo);
+                return;
+            }
+
+            imageInfo = new ImageInfo();
             imageInfo.setImageName(imageName);
             imageInfo.setMd5(md5);
             // 获取到image的id
@@ -87,14 +93,38 @@ public class ImageServiceImpl implements IImageService {
             imageInfoDao.insert(imageInfo);
         });
 
-        return imageInfoDao.findByMd5(md5).getId();
+        return imageInfoDao.findFirstByMd5(md5).getId();
     }
 
     @Override
-    public boolean imageExist(String md5) {
+    public String imageExistByMd5(String md5) {
 
-        ImageInfo info = imageInfoDao.findByMd5(md5);
-        return info != null;
+        ImageInfo info = imageInfoDao.findFirstByMd5(md5);
+        if (info != null) {
+            return info.getId();
+        }
+        return null;
 
+    }
+
+    @Override
+    public String imageExistByName(String imageName) {
+        Image image = dockerService.getImageByNameFromRepo(imageName);
+        if (image != null) {
+
+            // 判断数据库中是否已经存在该镜像
+            ImageInfo info = imageInfoDao.findFirstBySha256(image.getId());
+            if (info != null) {
+                return info.getId();
+            } else {
+                ImageInfo imageInfo = new ImageInfo();
+                imageInfo.setImageName(imageName);
+                imageInfo.setSha256(image.getId());
+                imageInfoDao.insert(imageInfo);
+                return imageInfo.getId();
+            }
+
+        }
+        return null;
     }
 }

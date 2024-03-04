@@ -1,10 +1,7 @@
 package com.binbin.containerengine.dao;
 
-import com.binbin.containerengine.entity.po.ExecInfo;
 import com.binbin.containerengine.entity.po.FileInfo;
 import org.springframework.data.mongodb.repository.MongoRepository;
-
-import java.util.Optional;
 
 /**
  * @author 7bin
@@ -12,6 +9,6 @@ import java.util.Optional;
  */
 public interface FileInfoDao extends MongoRepository<FileInfo, String> {
 
-    FileInfo findByMd5(String md5);
+    FileInfo findFirstByMd5(String md5);
 
 }

@@ -64,10 +64,11 @@ public class DockerServiceImpl implements IDockerService {
     private final static String CONTAINER_DIR = "container";
 
     @Override
-    public void listContainer() {
+    public List<Container> listContainer() {
         List<Container> list =  dockerClient.listContainersCmd()
             .withShowAll(true)
             .exec();
+        return list;
     }
 
     @Override
@@ -126,6 +127,21 @@ public class DockerServiceImpl implements IDockerService {
 
         return images;
 
+    }
+
+    @Override
+    public Image getImageByNameFromRepo(String name) {
+        List<Image> images = listImages();
+        for (Image image : images) {
+            if (image.getRepoTags() != null){
+                for (String repoTag : image.getRepoTags()) {
+                    if (repoTag.contains(name)){
+                        return image;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
 
@@ -450,7 +466,7 @@ public class DockerServiceImpl implements IDockerService {
             }
         };
 
-        ThreadPoolManager.instance().schedule(task2);
+        // ThreadPoolManager.instance().schedule(task2);
     }
 
 

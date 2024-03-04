@@ -7,6 +7,7 @@ import com.binbin.containerengine.entity.po.ExecInfo;
 import com.binbin.containerengine.entity.po.docker.ContainerInfo;
 import com.binbin.containerengine.entity.po.docker.ImageInfo;
 import com.github.dockerjava.api.command.InspectExecResponse;
+import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Image;
 
 import java.io.IOException;
@@ -18,7 +19,7 @@ import java.util.List;
  */
 public interface IDockerService {
 
-    void listContainer();
+    List<Container> listContainer();
 
     ContainerInfo createContainer(ContainerInfo containerInfo);
 
@@ -31,6 +32,8 @@ public interface IDockerService {
 
     //获取docker镜像列表
     List<Image> listImages();
+
+    Image getImageByNameFromRepo(String name);
 
     //获取docker容器列表
     List<ContainerInfo> listContainers();
