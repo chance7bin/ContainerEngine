@@ -69,14 +69,14 @@ public class ImageServiceImpl implements IImageService {
 
             ImageInfo imageInfo = imageInfoDao.findFirstByImageName(imageName);
             if (imageInfo != null) {
-                imageInfo.setMd5(md5);
+                imageInfo.setMd5(fileInfo.getMd5());
                 imageInfoDao.save(imageInfo);
                 return;
             }
 
             imageInfo = new ImageInfo();
             imageInfo.setImageName(imageName);
-            imageInfo.setMd5(md5);
+            imageInfo.setMd5(fileInfo.getMd5());
             // 获取到image的id
             List<Image> images = dockerService.listImages();
             for (Image image : images) {

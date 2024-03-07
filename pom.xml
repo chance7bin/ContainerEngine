@@ -230,10 +230,11 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
-                <configuration>
-                    <mainClass>com.binbin.containerengine.ContainerEngineApplication</mainClass>
-                    <skip>true</skip>
-                </configuration>
+                <!--需注释掉才能打包项目-->
+                <!--<configuration>-->
+                <!--    <mainClass>com.binbin.containerengine.ContainerEngineApplication</mainClass>-->
+                <!--    <skip>true</skip>-->
+                <!--</configuration>-->
                 <executions>
                     <execution>
                         <id>repackage</id>
