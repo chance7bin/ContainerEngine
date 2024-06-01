@@ -1,0 +1,58 @@
+<ModelEnv id="">
+
+    <Infomation>
+        <Title>词云模型环境依赖</Title>
+        <Description>包含MPI、GDAL等环境依赖</Description>
+        <Author>admin</Author>
+        <Email>12345678@163.com</Email>
+        <Version>1.0</Version>
+        <Date>2024-01-01</Date>
+    </Infomation>
+
+    <Image>
+        <ImageName>pycw:3.0</ImageName>
+        <ImageTar>cw_env.tar</ImageTar>
+        <ImageMd5>2746df5572303a84ae5a21224ad9b834</ImageMd5>
+    </Image>
+
+    <Container>
+        <ScriptInfo>
+
+            <ArgsType>
+                <ArgDeclaration name="input" format="pattern" value="{}" />
+            </ArgsType>
+
+            <Scripts>
+                <Script name="runmodel" dir="/home/model" command="python createWordCloud.py {} {} {}">
+                    <Parameter name="input1" description="" required="true" ref="input" />
+                    <Parameter name="input2" description="" required="true" ref="input" />
+                    <Parameter name="input3" description="" required="true" ref="input" />
+                </Script>
+            </Scripts>
+            
+        </ScriptInfo>
+    </Container>
+	
+	<Selector>
+        <Required>
+            <MatchLabels>
+                <Label key="deployDocker" value="true" />
+            </MatchLabels>
+            <MatchExpressions>
+                <Expression key="freeDisk" operator="Ge" value="1GB" />
+            </MatchExpressions>
+        </Required>
+        <Preference weight="80">
+            <MatchExpressions>
+                <Expression key="cpuNum" operator="Ge" value="4" />
+                <Expression key="cpuUsage" operator="Le" value="80" />
+            </MatchExpressions>
+        </Preference>
+        <Preference weight="60"> 
+            <MatchExpressions>
+                <Expression key="freeDisk" operator="Ge" value="50GB" />
+            </MatchExpressions>
+        </Preference>
+    </Selector>
+
+</ModelEnv>

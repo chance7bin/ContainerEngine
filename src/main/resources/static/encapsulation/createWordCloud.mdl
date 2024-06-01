@@ -1,0 +1,58 @@
+<ModelClass name="createWordCloud" uid="3667daec-e545-4d00-9f05-6fcff7e16c85" type="SimpleCalculation">
+    <AttributeSet>
+	    <Categories>
+			<Category principle="" path="" />
+		</Categories>
+		<LocalAttributes>
+			<LocalAttribute local="ZH_CN" localName="创建词云" wiki="">
+				<Keywords>创建词云</Keywords>
+				<Abstract>根据传入的中文或者英文文本生成对应的词云图片</Abstract>
+			</LocalAttribute>
+			<LocalAttribute local="EN_US" localName="createWordCloud" wiki="">
+				<Keywords>create wordcolud</Keywords>
+				<Abstract>Create wordcolud according to the input text file,written in English or Chinese.</Abstract>
+			</LocalAttribute>
+		</LocalAttributes>
+	</AttributeSet>
+	<Behavior>
+		<RelatedDatasets>
+			<DatasetItem name="input" type="internal" description="input">
+				<UdxDeclaration>
+					<UdxNode />
+				</UdxDeclaration>
+			</DatasetItem>
+			<DatasetItem name="output" type="internal" description="output">
+				<UdxDeclaration>
+					<UdxNode />
+				</UdxDeclaration>
+			</DatasetItem>
+		</RelatedDatasets>
+		<StateGroup>
+			<States>
+				<State id="349a82c8-7c63-443e-992f-eeff6defa9c2" name="run" type="basic" description="get input, run the program and output the result">
+					<Event name="inputTextFile" type="response" description="the file used to create wordcloud" optional="False">
+						<ResponseParameter datasetReference="input" description="" />
+					</Event>
+					<Event name="inputLanguageFile" type="response" description="language in which the text file is written" optional="False">
+						<ResponseParameter datasetReference="input" description="" />
+					</Event>
+					<Event name="outputResult" type="noresponse" description="output result" optional="False">
+						<DispatchParameter datasetReference="output" description="" />
+					</Event>
+				</State>
+			</States>
+			<StateTransitions />
+		</StateGroup>
+	</Behavior>
+	<Runtime name="" version="1.0.0.0" baseDir="$(ModelServicePath)\model" entry="encapsulation.py">
+		<HardwareConfigures>
+			<server key="cpu core numble" value="[2,infinite)" />
+			<server key="memory size" value="[2GB,infinite)" />
+		</HardwareConfigures>
+		<SoftwareConfigures>
+			<server key="Operating System" platform="x64" value="win 6||win 7||win 8||win 8.1||win 10||win xp" />
+		</SoftwareConfigures>
+			<Assemblies />
+		<SupportiveResources />
+	</Runtime>
+</ModelClass>
