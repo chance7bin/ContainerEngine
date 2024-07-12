@@ -7,17 +7,17 @@
 ## 模型与容器交互方法设计
 
 ### 脚本调用结构化描述
-<img src="https://blog-images-1301988137.cos.ap-nanjing.myqcloud.com/blog%2F2407%2F1.png" width="80%" />
+<img src="./doc/images/1.png" width="80%" />
 
 
 ### 模型容器化交互标准设计
-<img src="https://blog-images-1301988137.cos.ap-nanjing.myqcloud.com/blog%2F2407%2F2.png" width="80%" />
-<img src="https://blog-images-1301988137.cos.ap-nanjing.myqcloud.com/blog%2F2407%2F3.png" width="80%" />
+<img src="./doc/images/2.png" width="80%" />
+<img src="./doc/images/3.png" width="80%" />
 
 ## 容器交互引擎设计
-<img src="https://blog-images-1301988137.cos.ap-nanjing.myqcloud.com/blog%2F2407%2F4.png" width="80%" />
-<img src="https://blog-images-1301988137.cos.ap-nanjing.myqcloud.com/blog%2F2407%2F5.png" width="80%" />
-<img src="https://blog-images-1301988137.cos.ap-nanjing.myqcloud.com/blog%2F2407%2F6.png" width="80%" />
+<img src="./doc/images/4.png" width="50%" />
+<img src="./doc/images/5.png" width="80%" />
+<img src="./doc/images/6.png" width="80%" />
 
 
 
